@@ -1,4 +1,6 @@
 
+
+import Area from './models/area';
 import Space from './models/space';
 
 const execute = () => {
@@ -13,30 +15,45 @@ const execute = () => {
   console.log('new space created')
 
   button.addEventListener('click', () => {
-    space.createArea();
+    const area = space.createArea();
     console.log('new area clicked')
-    // area.on('select', e => {
-    //   const area = e.target as Area;
-    //   const resizableEl = area.getResizable() 
-    //   resizableEl.style.backgroundColor = 'blue';
-    // });
+
+    // // select test 
+    area.on('select', e => {
+      const area = e.target as Area;
+      const resizableEl = area.getResizable() 
+      resizableEl.style.backgroundColor = 'blue';
+    });
+    area.on('deselect', e => {
+      const area = e.target as Area;
+      const resizableEl = area.getResizable() 
+      resizableEl.style.backgroundColor = 'red';
+    });
+
+    // delete test
+    area.on('before-delete', ()=>{
+      console.log('before delete')
+    })
+    area.on('after-delete', ()=>{
+      console.log('afterdelete')
+    })
+
+    // resize test
+    area.on('resize', (e)=>{
+      console.log('resize', e)
+    })
+    area.on('resize-start', (e)=>{
+      console.log('resize-start', e)
+    })
+    area.on('resize-end', (e)=>{
+      console.log('resize-end', e)
+    })
+
+    area.on('move', (e)=>{
+      console.log('move', e)
+    })
 
 
-    // area.on('deselect', e => {
-    //   const area = e.target as Area;
-    //   const resizableEl = area.getResizable() 
-    //   resizableEl.style.backgroundColor = 'red';
-    // });
-
-
-    // area.on('before-delete', ()=>{
-    //   console.log('before delete')
-    // })
-
-
-    // area.on('after-delete', ()=>{
-    //   console.log('after delete')
-    // })
 
   });
 

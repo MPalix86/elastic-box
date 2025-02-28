@@ -1,6 +1,5 @@
-import Area from './area';
-import Commons from '../types/commons';
-import { AreaEvents } from '../types/area-events';
+import Area from './models/area';
+import Commons from './types/commons';
 
 /**
  * The Space class manages a container of resizable and movable areas
@@ -15,7 +14,7 @@ export default class Space {
   private _container: HTMLElement;
 
   // Unique identifier for this space
-  // @ts-expect-error: id non utilizzato ma mantenuto per futura implementazione
+
   private _id?: string;
 
   // Counter for total areas created in this space
@@ -86,63 +85,42 @@ export default class Space {
    */
   private async _mouseMove(e: MouseEvent): Promise<void> {
     const area = this._findSelectedArea();
-
     if (!area) return;
 
-    const state = area.getState();
-    const style = area.getStyle();
-
-    let newWidth = state.startWidth
-    let newHeight = state.startHeight
-    let newLeft = state.offsetX
-    let newTop = state.offsetY
-
     if (area.getState().isResizing) {
-      area._executeListeners(AreaEvents.Resize)
       // Resize mode
       const deltaX = e.clientX - area.getState().startClientX;
       const deltaY = e.clientY - area.getState().startClientY;
-      const position = area.getState().position
-      
-    
+
       // Horizontal resize
-      if (position.right) {
-        newWidth = Math.max(Commons.RESIZE_OFFSET * 2, state.startWidth + deltaX);
-        style.width = newWidth + 'px';
-      } else if (position.left) {
-        newWidth = Math.max(Commons.RESIZE_OFFSET * 2, state.startWidth - deltaX);
-        newLeft = state.startLeft + state.startWidth - newWidth;
-        style.width = newWidth + 'px';
-        style.left = newLeft + 'px';
-      }
-      
-      // vertical resize
-      if (position.bottom) {
-        newHeight = Math.max(Commons.RESIZE_OFFSET * 2, state.startHeight + deltaY);
-        style.height = newHeight + 'px';
-      } else if (position.top) {
-        newHeight = Math.max(Commons.RESIZE_OFFSET * 2, state.startHeight - deltaY);
-        newTop = state.startTop + state.startHeight - newHeight;
-        style.height = newHeight + 'px';
-        style.top = newTop + 'px';
+      if (area.getState().position.right) {
+        const newWidth = Math.max(Commons.RESIZE_OFFSET * 2, area.getState().startWidth + deltaX);
+        area.getStyle().width = newWidth + 'px';
+      } else if (area.getState().position.left) {
+        const newWidth = Math.max(Commons.RESIZE_OFFSET * 2, area.getState().startWidth - deltaX);
+        const newLeft = area.getState().startLeft + area.getState().startWidth - newWidth;
+        area.getStyle().width = newWidth + 'px';
+        area.getStyle().left = newLeft + 'px';
       }
 
-       
-      area._executeListeners(AreaEvents.Resize, newLeft, newTop, newWidth, newHeight)
-
-    } else if (state.enableMovement) {
-    
+      // Vertical resize
+      if (area.getState().position.bottom) {
+        const newHeight = Math.max(Commons.RESIZE_OFFSET * 2, area.getState().startHeight + deltaY);
+        area.getStyle().height = newHeight + 'px';
+      } else if (area.getState().position.top) {
+        const newHeight = Math.max(Commons.RESIZE_OFFSET * 2, area.getState().startHeight - deltaY);
+        const newTop = area.getState().startTop + area.getState().startHeight - newHeight;
+        area.getStyle().height = newHeight + 'px';
+        area.getStyle().top = newTop + 'px';
+      }
+    } else if (area.getState().enableMovement) {
       // Movement mode
-      newLeft = state.startLeft + (e.clientX - state.startClientX);
-      newTop = state.startTop + (e.clientY - state.startClientY);
+      const newLeft = area.getState().startLeft + (e.clientX - area.getState().startClientX);
+      const newTop = area.getState().startTop + (e.clientY - area.getState().startClientY);
 
-      style.left = newLeft + 'px';
-      style.top = newTop + 'px';
-      area._executeListeners(AreaEvents.Move, newLeft, newTop, newWidth, newHeight)
+      area.getStyle().left = newLeft + 'px';
+      area.getStyle().top = newTop + 'px';
     }
-
-
-    
   }
 
   /**

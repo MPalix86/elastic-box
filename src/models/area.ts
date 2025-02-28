@@ -113,38 +113,62 @@ export default class Area {
     console.log(this._eventListeners)
   }
 
-  _executeListeners(eventname :AreaEvents) {
-    const event = this._createEvent(eventname)
+  _executeListeners(eventname :AreaEvents,  x?: Number, y?: number, width?: number, height?: number, side?: string) {
+    const event = this._createEvent(eventname, x, y, width, height, side)
     const listeners = this._eventListeners.get(event.type);
     if (listeners) {
       listeners.forEach(callback => callback(event));
     }
   }
 
-  _getPositionString(val: any): 'left' | 'right' | 'top' | 'bottom' | null {
-    switch (true) {
-      case val.left:
-        return 'left';
-      case val.right:
-        return 'right';
-      case val.top:
-        return 'top';
-      case val.bottom:
-        return 'bottom';
-      default:
-        return null;
-    }
-  }
 
-  _createEvent(eventName : AreaEvents) : BaseAreaEvent {
+  _getPositionString(val: any): string {
+    // Check for null or undefined
+    if (!val) {
+      return null;
+    }
+  
+    // Handle corner positions (combinations)
+    if (val.top && val.left) {
+      return 'top-left';
+    }
+    if (val.top && val.right) {
+      return 'top-right';
+    }
+    if (val.bottom && val.left) {
+      return 'bottom-left';
+    }
+    if (val.bottom && val.right) {
+      return 'bottom-right';
+    }
+  
+    // Handle single positions
+    if (val.left) {
+      return 'left';
+    }
+    if (val.right) {
+      return 'right';
+    }
+    if (val.top) {
+      return 'top';
+    }
+    if (val.bottom) {
+      return 'bottom';
+    }
+  
+    // If no recognized position
+    return null;
+  }
+  // prettier-ignore
+  _createEvent(eventName : AreaEvents , x?: Number, y?: number, width?: number, height?: number, side?: string) : BaseAreaEvent {
     const event : BaseAreaEvent = {
       type:eventName,
       target: this,
-      x : this._state.offsetX || null,
-      y : this._state.offsetY || null,
-      width: this._state.startWidth || null,
-      height: this._state.startHeight || null,
-      side: this. _getPositionString(this._state.position)
+      x : x || this._state.offsetX || null,
+      y : y || this._state.offsetY || null,
+      width: width || this._state.startWidth || null,
+      height: height ||this._state.startHeight || null,
+      side: side || this. _getPositionString(this._state.position)
     }
     return event;
   }
@@ -218,6 +242,7 @@ export default class Area {
     this._state.prunable = true;
     this._container.removeChild(this._resizable);
     this._executeListeners(AreaEvents.AfterDelete)
+    console.log('after-delete dentro area')
     // this._space.prune(); 
   } 
 
@@ -229,7 +254,7 @@ export default class Area {
     if (this._state.prunable) return;
     // console.log('mousedonw in area ', this._id);
     this._state.isThisAreaSelected = true;
-    
+    this._executeListeners(AreaEvents.Select)
 
     // Reset delle posizioni
     const rect = this._resizable.getBoundingClientRect();
@@ -256,6 +281,7 @@ export default class Area {
       // Salva i valori iniziali
       this._state.isResizing = true;
       this._state.enableMovement = false; // Corretto dal JS originale
+      this._executeListeners(AreaEvents.ResizeStart)
     } else {
       this._state.enableMovement = true;
       this._state.isResizing = false;
@@ -309,12 +335,7 @@ export default class Area {
     // Corretta l'impostazione dell'isThisAreaSelected (nel JS originale era sbagliata)
     this._state.isThisAreaSelected = false;
 
-    // @ts-ignore
-    const event : AreaSelectEvent = {
-      type : 'deselect',
-      target: this
-    } 
-    // this._executeListeners(event)
+    this._executeListeners(AreaEvents.Deselect)
   }
 
   _resetPosition() {

@@ -166,12 +166,32 @@ const updateCursor = (element: HTMLElement, state: State): void => {
 };
 
 
+const throttle = (func: any, limit: number) => {
+  let inThrottle: boolean = false;
+  let lastResult: any = null;
+  
+  return function(this: any, ...args: any[]): any {
+    if (!inThrottle) {
+      lastResult = func.apply(this, args);
+      inThrottle = true;
+      
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
+    }
+    
+    return lastResult;
+  };
+}
+
+
 
 const commons = {
   cursors,
   RESIZE_OFFSET,
   updateCursor,
   waitUntilCondition,
+  throttle 
 };
 
 export default commons;
