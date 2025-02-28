@@ -1,4 +1,9 @@
-import commons from "./commons";
+// import {  BaseAreaEvent } from "../types/area-events";
+import { AreaEvents, BaseAreaEvent } from "../types/area-events";
+import commons from "../types/commons";
+
+
+
 
 // Type definitions for Area class
 interface AreaState {
@@ -38,7 +43,7 @@ export default class Area {
   private _areaOptions: HTMLDivElement = document.createElement('div');
   private _deleteButton: HTMLButtonElement = document.createElement('button');
   private _id: string;
-  private _space: Space;
+  // private _space: Space;
 
   // Internal state of the area, tracks selection, movement, and resize states
   private _state: AreaState = {
@@ -62,6 +67,9 @@ export default class Area {
     },
   };
 
+  // private _eventListeners: Map<keyof AreaEventMap, Set<(event: any) => void>> = new Map();
+
+
   /**
    * Creates a new Area instance
    * @param space The parent Space object that contains this area
@@ -70,31 +78,77 @@ export default class Area {
     this._container = space.getContainer();
     this._id = `${space.getTotalAreas()}}`;
     this._createNewResizableDiv();
-    this._space = space;
+    // this._space = space;
     console.log('created area with id', this._id);
   }
+
+  private _eventListeners: Map<AreaEvents | string, Set<(event: BaseAreaEvent) => void>> = new Map();
 
   /**
    * Returns the current state of the area
    */
-  public getState(): AreaState {
+  getState(): AreaState {
     return this._state;
   }
 
-  public getResizable(): HTMLDivElement {
+  getResizable(): HTMLDivElement {
     return this._resizable;
   }
 
-  public getStyle(): CSSStyleDeclaration {
+  getStyle(): CSSStyleDeclaration {
     return this._resizable.style;
   }
 
   /**
    * Deselects this area, canceling any active movement or resize operation
    */
-  public deselect(): void {
+  deselect(): void {
     this._mouseUp();
   }
+
+  on(eventName : AreaEvents | string , callback : (e : BaseAreaEvent) => void ){
+    if(!this._eventListeners.has(eventName)) this._eventListeners.set(eventName , new Set())
+    const set = this._eventListeners.get(eventName)
+    set.add(callback)
+    console.log(this._eventListeners)
+  }
+
+  _executeListeners(eventname :AreaEvents) {
+    const event = this._createEvent(eventname)
+    const listeners = this._eventListeners.get(event.type);
+    if (listeners) {
+      listeners.forEach(callback => callback(event));
+    }
+  }
+
+  _getPositionString(val: any): 'left' | 'right' | 'top' | 'bottom' | null {
+    switch (true) {
+      case val.left:
+        return 'left';
+      case val.right:
+        return 'right';
+      case val.top:
+        return 'top';
+      case val.bottom:
+        return 'bottom';
+      default:
+        return null;
+    }
+  }
+
+  _createEvent(eventName : AreaEvents) : BaseAreaEvent {
+    const event : BaseAreaEvent = {
+      type:eventName,
+      target: this,
+      x : this._state.offsetX || null,
+      y : this._state.offsetY || null,
+      width: this._state.startWidth || null,
+      height: this._state.startHeight || null,
+      side: this. _getPositionString(this._state.position)
+    }
+    return event;
+  }
+
 
   /**
    * Creates the resizable div with handle and delete button
@@ -156,14 +210,16 @@ export default class Area {
    */
   private _delete(): void {
     console.log('cliccato');
+    this._executeListeners(AreaEvents.BeforeDelete)
     this._resizable.removeEventListener('mousemove', this._mouseDown);
     this._resizable.removeEventListener('mouseup', this._mouseUp);
     this._resizable.removeEventListener('mousedown', this._mouseMove);
     this._deleteButton.removeEventListener('click', this._delete);
     this._state.prunable = true;
     this._container.removeChild(this._resizable);
-    this._space.prune();
-  }
+    this._executeListeners(AreaEvents.AfterDelete)
+    // this._space.prune(); 
+  } 
 
   /**
    * Handles mouse down events on the area
@@ -173,8 +229,9 @@ export default class Area {
     if (this._state.prunable) return;
     // console.log('mousedonw in area ', this._id);
     this._state.isThisAreaSelected = true;
-    // Reset delle posizioni
+    
 
+    // Reset delle posizioni
     const rect = this._resizable.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -203,6 +260,16 @@ export default class Area {
       this._state.enableMovement = true;
       this._state.isResizing = false;
     }
+
+      // // sending select event
+      // const event : AreaSelectEvent = {
+      //   type : 'select',
+      //   target: this
+      // }
+      
+      // this._executeListeners(event)
+      
+      e.preventDefault()
   }
 
   /**
@@ -211,7 +278,6 @@ export default class Area {
    */
   private _mouseMove(e: MouseEvent): void {
     if (this._state.prunable) return;
-    // console.log('mousemove in area ', this._id);
     if (!this._state.isResizing && !this._state.enableMovement) {
       // Reset delle posizioni
       this._resetPosition()
@@ -242,6 +308,13 @@ export default class Area {
     this._resizable.style.cursor = commons.cursors.DEFAULT;
     // Corretta l'impostazione dell'isThisAreaSelected (nel JS originale era sbagliata)
     this._state.isThisAreaSelected = false;
+
+    // @ts-ignore
+    const event : AreaSelectEvent = {
+      type : 'deselect',
+      target: this
+    } 
+    // this._executeListeners(event)
   }
 
   _resetPosition() {

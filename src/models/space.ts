@@ -1,11 +1,12 @@
 import Area from './area';
-import Commons from './commons';
+import Commons from '../types/commons';
 
 /**
  * The Space class manages a container of resizable and movable areas
  * It handles mouse events and coordinates interactions between areas
  */
 export default class Space {
+
   // Array of all areas in this space
   private _areas: Area[] = [];
 

@@ -8,6 +8,9 @@ export interface Position {
   bottom: boolean;
 }
 
+
+
+
 export interface State {
   position: Position;
   [key: string]: any; // Per altre proprietà di state che potrebbero essere necessarie
