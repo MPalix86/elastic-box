@@ -9,6 +9,7 @@ export const enum AreaEvents {
   Deselect = 'deselect',
   BeforeDelete = 'before-delete',
   AfterDelete = 'after-delete',
+  Confirmed = 'confirmed',
 }
 
 export interface BaseAreaEvent {
@@ -18,7 +19,5 @@ export interface BaseAreaEvent {
   y?: number;
   width?: number;
   height?: number;
-  side?:
-
-    | string;
+  side?: string;
 }
