@@ -1,36 +1,33 @@
+
 import {Space, Area} from '@MPalix86/elastic-box';
 
 // Seleziona gli elementi DOM con controllo di esistenza
 const container = document.querySelector('#mainDiv');
 const button = document.querySelector('#newDiv');
-const remove = document.querySelector('#remove');
+const getEls = document.querySelector('#getElements');
 
 // Verifica che gli elementi esistano
 if (!container) throw new Error('Container element #mainDiv not found');
 if (!button) throw new Error('Button element #newDiv not found');
-if (!remove) throw new Error('Remove button element #remove not found');
+if (!getEls) throw new Error('Remove button element #remove not found');
 
 console.dir( Space);
 console.dir('Tipo di Space:', typeof Space);
 console.log('Container:', container);
 
 // Dichiarazione delle variabili
-let area;
+let area : Area;
 let select;
 
 // Inizializzazione dello spazio
+// @ts-ignore
 const space = new Space(container);
 console.log('new space created');
 
 // Listener per rimuovere l'evento 'select'
-remove.addEventListener('click', () => {
-  console.log('cliccato-remove');
-  if (area) {
-    area.off('select', select);
-    console.log('Evento select rimosso');
-  } else {
-    console.log('Nessuna area disponibile');
-  }
+getEls.addEventListener('click', () => {
+  const els = area.detectElementsUnderArea('default','.wrapper');
+  console.log(els)
 });
 
 // Listener per creare una nuova area

@@ -1,14 +1,9 @@
 import { AreaEvents, BaseAreaEvent } from '../types/area-events';
 import commons from '../types/commons';
 import { AreaState } from './area-state.js';
-import AreaStyle from './area-style';
+import Space from './space';
+import styles from './area-style';
 
-// Definizione dell'interfaccia per Space
-interface Space {
-  getContainer(): HTMLElement;
-  getTotalAreas(): number;
-  prune(): void;
-}
 
 /**
  * Area class represents a resizable and draggable area within a container
@@ -89,6 +84,82 @@ export default class Area {
     if (set.delete(callback)) console.log('evento elminato');
   }
 
+
+  detectElementsUnderArea(precision?: number | 'default', selector ?:string, ) {
+
+    const movableRect = this._resizable.getBoundingClientRect();
+    const container = this._container.getBoundingClientRect();
+    
+    const height = movableRect.height;
+    const width = movableRect.width;
+  
+    
+    if (precision == undefined) precision = 0.25;
+    else if(precision == 'default') precision = 0.25
+    else precision = 1 / Math.abs(precision)
+
+    const testPoints = []
+    
+    // Add more points for greater accuracy
+    for (let i = 0; i <= width; i += width * precision) {
+      for(let j = 0; j <= height ; j+= height * precision){
+        const x = movableRect.left + i
+        const y = movableRect.top  + j
+
+        const relativeX = x - container.left
+        const relativeY = y - container.top
+
+        const div = document.createElement('div')
+        div.style.position = 'absolute'
+        div.style.backgroundColor = 'white'
+        div.style.height = '10px'
+        div.style.width = '10px'
+        div.style.left = `${relativeX}px`
+        div.style.top =  `${relativeY}px`
+        testPoints.push({x:relativeX , y:relativeY})
+        console.log('x ',x,' y ',y)
+        console.log('i ',i, 'j ',j)
+        this._container.appendChild(div)
+      }
+    }
+    
+    
+    // Map to count how many test points are inside each wrapper
+    const elementHits = new Map();
+    
+    // Use elementFromPoint for each test point
+    testPoints.forEach(point => {
+      // Get the element at the current position
+      const element = document.elementFromPoint(point.x, point.y);
+      
+      if (element) {
+        // Find the nearest wrapper by traversing up the DOM
+        let searched = null;
+        
+        if(selector) searched = element.closest(selector)
+        else searched = element
+
+        
+        // If we found a wrapper, increment the count
+        if (searched) {
+          const hits = elementHits.get(searched) || 0;
+          elementHits.set(searched, hits + 1);
+        }
+      }
+    });
+    
+    // Convert the map to an array of elements
+    const elementsUnder = Array.from(elementHits.entries())
+      .filter(([_, hits]) => hits > 0) // Remove elements without hits
+      .sort((a, b) => b[1] - a[1]) // Sort by number of hits (highest to lowest)
+      .map(([element, hits]) => ({
+        element,
+        hits,
+      }));
+    
+    return elementsUnder;
+  }
+
   _executeListeners(eventname: AreaEvents, x?: Number, y?: number, width?: number, height?: number, side?: string) {
     const event = this._createEvent(eventname, x, y, width, height, side);
     const listeners = this._eventListeners.get(event.type);
@@ -137,10 +208,10 @@ export default class Area {
   private _createNewResizableDiv(): void {
     this._resizable.classList.add('resizable');
 
-    const resizableStyles = AreaStyle.elements.resizable;
-    const areaOptionsStyle = AreaStyle.elements.areaOptions;
-    const deleteButtonStyle = AreaStyle.elements.deleteButton;
-    const confirmButtonStyle = AreaStyle.elements.confirmButton;
+    const resizableStyles = styles.elements.resizable;
+    const areaOptionsStyle = styles.elements.areaOptions;
+    const deleteButtonStyle = styles.elements.deleteButton;
+    const confirmButtonStyle = styles.elements.confirmButton;
 
     this._resizable.classList.add(resizableStyles.style);
     this._areaOptions.classList.add(areaOptionsStyle.style);
