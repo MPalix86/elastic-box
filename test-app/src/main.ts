@@ -1,5 +1,5 @@
 
-import {Space, Area} from '@MPalix86/elastic-box';
+import {Space, Area, CustomStyle} from '@MPalix86/elastic-box';
 
 // Seleziona gli elementi DOM con controllo di esistenza
 const container = document.querySelector('#mainDiv');
@@ -19,12 +19,23 @@ console.log('Container:', container);
 let area : Area;
 let select;
 
+const customStyle : CustomStyle = {
+  resizable : {
+    backgroundColor : 'transparent',
+    border : '2px solid white',
+    height : '200px',
+    width : '300px',
+    minHeight: '100px',
+    minWidth: '100px'
+  }
+}
+
 // Inizializzazione dello spazio
 // @ts-ignore
-const space = new Space(container);
+const space = new Space(container, customStyle);
 console.log('new space created');
 
-// Listener per rimuovere l'evento 'select'
+
 getEls.addEventListener('click', () => {
   const els = area.detectElementsUnderArea('default','.wrapper');
   console.log(els)
@@ -32,46 +43,50 @@ getEls.addEventListener('click', () => {
 
 // Listener per creare una nuova area
 button.addEventListener('click', () => {
-  console.log('click');
+
   area = space.createArea();
   console.log('new area created');
 
-  // Handler per l'evento select
-  select = e => {
-    const area = e.target;
-    const resizableEl = area.getResizable();
-    resizableEl.style.backgroundColor = 'blue';
-  };
+  // // Handler per l'evento select
+  // select = e => {
+  //   const area = e.target;
+  //   const resizableEl = area.getResizable();
+  //   resizableEl.style.backgroundColor = 'blue';
+  // };
 
-  // Eventi di selezione
-  area.on('select', select);
-  area.on('deselect', e => {
-    const area = e.target;
-    const resizableEl = area.getResizable();
-    resizableEl.style.backgroundColor = 'red';
-  });
 
-  // Eventi di eliminazione
-  area.on('before-delete', () => {
-    console.log('before delete');
-  });
-  area.on('after-delete', () => {
-    console.log('afterdelete');
-  });
+  // // Eventi di selezione
+  // area.on('select', select);
+  // area.on('deselect', e => {
+  //   const area = e.target;
+  //   const resizableEl = area.getResizable();
+  //   resizableEl.style.backgroundColor = 'red';
+  // });
 
-  // Eventi di ridimensionamento
-  area.on('resize', e => {
-    console.log('resize', e);
-  });
-  area.on('resize-start', e => {
-    console.log('resize-start', e);
-  });
-  area.on('resize-end', e => {
-    console.log('resize-end', e);
-  });
 
-  // Eventi di movimento
-  area.on('move', e => {
-    console.log('move', e);
-  });
+  // // Eventi di eliminazione
+  // area.on('before-delete', () => {
+  //   console.log('before delete');
+  // });
+  // area.on('after-delete', () => {
+  //   console.log('afterdelete');
+  // });
+
+
+  // // Eventi di ridimensionamento
+  // area.on('resize', e => {
+  //   console.log('resize', e);
+  // });
+  // area.on('resize-start', e => {
+  //   console.log('resize-start', e);
+  // });
+  // area.on('resize-end', e => {
+  //   console.log('resize-end', e);
+  // });
+
+
+  // // Eventi di movimento
+  // area.on('move', e => {
+  //   console.log('move', e);
+  // });
 });

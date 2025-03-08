@@ -2,7 +2,8 @@ import { AreaEvents, BaseAreaEvent } from '../types/area-events';
 import commons from '../types/commons';
 import { AreaState } from './area-state.js';
 import Space from './space';
-import styles from './area-style';
+import createAreaStyle from '../styles/area-style';
+import transitions from '../styles/transitions';
 
 
 /**
@@ -31,10 +32,10 @@ export default class Area {
    * @param space The parent Space object that contains this area
    */
   constructor(space: Space) {
+    this._space = space;
     this._container = space.getContainer();
     this._id = `${space.getTotalAreas()}}`;
     this._createNewResizableDiv();
-    // this._space = space;
   }
 
   /**
@@ -108,18 +109,8 @@ export default class Area {
 
         const relativeX = x - container.left
         const relativeY = y - container.top
-
-        const div = document.createElement('div')
-        div.style.position = 'absolute'
-        div.style.backgroundColor = 'white'
-        div.style.height = '10px'
-        div.style.width = '10px'
-        div.style.left = `${relativeX}px`
-        div.style.top =  `${relativeY}px`
         testPoints.push({x:relativeX , y:relativeY})
-        console.log('x ',x,' y ',y)
-        console.log('i ',i, 'j ',j)
-        this._container.appendChild(div)
+        
       }
     }
     
@@ -207,11 +198,14 @@ export default class Area {
    */
   private _createNewResizableDiv(): void {
     this._resizable.classList.add('resizable');
+    console.log(this._space)
+    const customStyle = this._space.getCustomStyle()
+    const style = createAreaStyle(customStyle)
 
-    const resizableStyles = styles.elements.resizable;
-    const areaOptionsStyle = styles.elements.areaOptions;
-    const deleteButtonStyle = styles.elements.deleteButton;
-    const confirmButtonStyle = styles.elements.confirmButton;
+    const resizableStyles = style.elements.resizable;
+    const areaOptionsStyle =style.elements.areaOptions;
+    const deleteButtonStyle = style.elements.deleteButton;
+    const confirmButtonStyle = style.elements.confirmButton;
 
     this._resizable.classList.add(resizableStyles.style);
     this._areaOptions.classList.add(areaOptionsStyle.style);
@@ -271,16 +265,28 @@ export default class Area {
   private _delete() {
     this._unboundlisteners();
     this._state.prunable = true;
-    this._container.removeChild(this._resizable);
-    this._space.prune(); // TODO aggiustre il discorso dei prune
-    this._executeListeners(AreaEvents.AfterDelete);
+    this._resizable.classList.add(transitions.shrinkKeyframe);
+  
+    // Attendi che l'animazione sia completata prima di rimuovere l'elemento
+    this._resizable.addEventListener('animationend', () => {
+      this._container.removeChild(this._resizable);
+      this._space.prune(); // TODO aggiustre il discorso dei prune
+      this._executeListeners(AreaEvents.AfterDelete);
+    }, { once: true });
   }
 
   private _confirm() {
-    this._unboundlisteners();
-    this._resizable.removeChild(this._areaOptions);
-    this._resizable.style.cursor ='default'
+
     this._executeListeners(AreaEvents.Confirmed);
+
+    this._resizable.classList.add(transitions.confirmKeyframe);
+
+    // Attendi che l'animazione sia completata prima di rimuovere l'elemento
+    this._resizable.addEventListener('animationend', () => {
+        this._unboundlisteners();
+      this._resizable.removeChild(this._areaOptions);
+      this._resizable.style.cursor ='default'
+    }, { once: true });
   }
 
   /**

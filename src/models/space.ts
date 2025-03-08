@@ -1,6 +1,7 @@
 import Area from './area';
 import Commons from '../types/commons';
 import { AreaEvents } from '../types/area-events';
+import { CustomStyle } from '../styles/area-style';
 
 /**
  * The Space class manages a container of resizable and movable areas
@@ -21,13 +22,16 @@ export default class Space {
   // Counter for total areas created in this space
   private _totalAreaCreatedInSpace = 0;
 
+  private _customSyle: CustomStyle  = {}
+
   /**
    * Creates a new Space with the given container
    * @param container HTML element that will contain the areas
    */
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, customStyle :CustomStyle = {} ) {
     this._container = container;
     this._createSpace();
+    this._customSyle = customStyle
   }
 
   /**
@@ -37,6 +41,7 @@ export default class Space {
     this._areas = this._areas.filter(a => !a.getState().prunable);
     console.log('areas ', this._areas);
   }
+  
 
   /**
    * Creates a new area in this space
@@ -48,6 +53,13 @@ export default class Space {
     this._areas.push(area);
     return area;
   }
+
+
+  public getCustomStyle(){
+    return this._customSyle
+
+  }
+
 
   /**
    * Returns the total number of areas created in this space
@@ -61,6 +73,13 @@ export default class Space {
    */
   public getContainer(): HTMLElement {
     return this._container;
+  }
+
+  /** 
+   * set custom style
+   */
+  public setDefaultStyle(customStyle : CustomStyle){
+    this._customSyle = customStyle
   }
 
   /**
