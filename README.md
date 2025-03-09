@@ -90,6 +90,11 @@ Resizable areas can detect elements underneath them (this feature is currently o
 // Detect elements under a resizable area matching a specific CSS selector
 const elements = area.detectElementsUnderArea('default', '.wrapper');
 console.log(elements);
+
+// If no selector is specified, it will detect any visible element at the position
+// (uses the underlying detectPoint functionality)
+const visibleElements = area.detectElementsUnderArea('default');
+console.log(visibleElements);
 ```
 
 ## Complete Events Reference
@@ -268,4 +273,4 @@ button.addEventListener('click', () => {
 - `off(event, callback)`: Removes a listener for the specified event (not implemented yet)
 
 ### Resizable Area
-- `detectElementsUnderArea(mode, selector)`: Detects elements under the resizable area matching the selector (only available for resizable areas)
+- `detectElementsUnderArea(mode, selector)`: Detects elements under the resizable area matching the selector (only available for resizable areas). If no selector is specified, it will detect any visible element at that position.
