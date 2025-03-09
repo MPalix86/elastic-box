@@ -12,6 +12,6 @@
     "vite": "^6.2.0"
   },
   "dependencies": {
-    "@__pali__/elastic-box": "^1.1.1"
+    "@__pali__/elastic-box": "^1.1.3"
   }
 }

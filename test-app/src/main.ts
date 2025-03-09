@@ -183,7 +183,6 @@ function handleBeforeDelete() {
 
 function handleAfterDelete() {
   console.log('Area has been deleted');
-  currentArea = null;
   toggleEventsBtn.disabled = true;
   toggleEventsBtn.textContent = 'Enable Events (No Area)';
 }
@@ -290,6 +289,7 @@ function toggleStyle() {
   space.setDefaultResizableStyle(currentStyle);
   
   // Aggiorna il testo del pulsante
+  // @ts-ignore
   toggleStyleBtn.textContent = currentStyle === defaultStyle 
     ? 'Switch to Pink Style' 
     : 'Switch to Blue Style';

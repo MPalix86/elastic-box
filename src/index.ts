@@ -7,6 +7,7 @@ import Area from './models/area';
 import { ResizableCustomStyle } from './styles/resizable-area-style';
 import { DrawableSetupOptions } from './types/area-types';
 import { DrawableCustomStyle } from './styles/drawable-area-style';
+import DrawableArea from "./models/drawable-area"
 
 // Esportazione corretta per evitare l'oggetto default annidato
-export { Space, Area , ResizableCustomStyle, DrawableSetupOptions, DrawableCustomStyle};
+export { Space, Area , ResizableCustomStyle, DrawableSetupOptions, DrawableCustomStyle, DrawableArea};
