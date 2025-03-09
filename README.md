@@ -68,6 +68,48 @@ Elastic-Box supports different types of areas:
 const area = space.createResizableArea();
 ```
 
+#### Resizable Area Events
+
+Resizable areas emit various events that you can listen to for interaction:
+
+| Event | Description |
+|--------|-------------|
+| `select` | Emitted when the area is selected |
+| `deselect` | Emitted when the area is deselected |
+| `before-delete` | Emitted before the area is deleted |
+| `after-delete` | Emitted after the area has been deleted |
+| `resize-start` | Emitted at the beginning of a resize operation |
+| `resize` | Emitted continuously during resizing |
+| `resize-end` | Emitted at the end of a resize operation |
+| `move` | Emitted during area movement |
+
+All resizable area events return an object with the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `type` | `AreaEvents` | The type of event that was triggered |
+| `target` | `Area` | Reference to the Area instance that triggered the event |
+| `x` | `number` | X position (optional, available in move and resize events) |
+| `y` | `number` | Y position (optional, available in move and resize events) |
+| `width` | `number` | Width (optional, available in resize events) |
+| `height` | `number` | Height (optional, available in resize events) |
+| `side` | `string` | Side being resized (optional, available in resize events) |
+
+#### Element Detection for Resizable Areas
+
+Resizable areas can detect elements underneath them:
+
+```typescript
+// Detect elements under a resizable area matching a specific CSS selector
+const elements = area.detectElementsUnderArea('default', '.wrapper');
+console.log(elements);
+
+// If no selector is specified, it will detect any visible element at the position
+// (uses the underlying detectPoint functionality)
+const visibleElements = area.detectElementsUnderArea('default');
+console.log(visibleElements);
+```
+
 ### Drawable Areas
 
 ```typescript
@@ -82,38 +124,17 @@ const options: DrawableSetupOptions = {
 const drawableArea = space.createDrawableArea(options);
 ```
 
-## Element Detection
+You can use either `turnInResizableArea` or `persist`:
+- When `turnInResizableArea` is `true`, the drawn area becomes resizable after drawing
+- When `persist` is `true`, the drawn area remains fixed in place without becoming resizable
+- Both options can be `false` to create a temporary drawable area
 
-Resizable areas can detect elements underneath them (this feature is currently only available for resizable areas):
+> **Note:** Event support for drawable areas is coming soon in future versions.
 
-```typescript
-// Detect elements under a resizable area matching a specific CSS selector
-const elements = area.detectElementsUnderArea('default', '.wrapper');
-console.log(elements);
-
-// If no selector is specified, it will detect any visible element at the position
-// (uses the underlying detectPoint functionality)
-const visibleElements = area.detectElementsUnderArea('default');
-console.log(visibleElements);
-```
-
-## Complete Events Reference
-
-| Event | Description |
-|--------|-------------|
-| `select` | Emitted when the area is selected |
-| `deselect` | Emitted when the area is deselected |
-| `before-delete` | Emitted before the area is deleted |
-| `after-delete` | Emitted after the area has been deleted |
-| `resize-start` | Emitted at the beginning of a resize operation |
-| `resize` | Emitted continuously during resizing |
-| `resize-end` | Emitted at the end of a resize operation |
-| `move` | Emitted during area movement |
-
-## Example
+## Example: Setting Up Resizable Area Event Listeners
 
 ```typescript
-// Function to set up all available listeners on an area
+// Function to set up all available listeners on a resizable area
 function setupAreaListeners(area) {
   // Selection events
   area.on('select', e => {
@@ -273,4 +294,7 @@ button.addEventListener('click', () => {
 - `off(event, callback)`: Removes a listener for the specified event (not implemented yet)
 
 ### Resizable Area
-- `detectElementsUnderArea(mode, selector)`: Detects elements under the resizable area matching the selector (only available for resizable areas). If no selector is specified, it will detect any visible element at that position.
+- `detectElementsUnderArea(mode, selector)`: Detects elements under the resizable area matching the selector. If no selector is specified, it will detect any visible element at that position.
+
+### Drawable Area
+Note: Additional methods and events for drawable areas are coming soon in future versions.
