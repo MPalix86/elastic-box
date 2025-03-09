@@ -4,7 +4,7 @@ Elastic-Box is a JavaScript/TypeScript library for creating dynamic layouts with
 
 ## Installation
 
-You need to setup your packag.json in order to use GitHub Packages as repository
+You need to setup your package.json in order to use GitHub Packages as repository
 
 ```bash
 npm install @mpalix86/elastic-box
@@ -36,9 +36,61 @@ button.addEventListener('click', () => {
 });
 ```
 
+## Customizing Styles
 
-Areas emit various events that you can listen to for interaction. Here's a complete example of all available listeners:
+You can customize the appearance of resizable areas by providing a custom style configuration:
 
+```typescript
+import { Space, ResizableCustomStyle } from '@mpalix86/elastic-box';
+
+const customStyle: ResizableCustomStyle = {
+  resizable: {
+    backgroundColor: 'transparent',
+    border: '2px solid white',
+    height: '200px',
+    width: '300px',
+    minHeight: '100px',
+    minWidth: '100px'
+  }
+};
+
+const space = new Space(container, customStyle);
+```
+
+## Creating Different Types of Areas
+
+Elastic-Box supports different types of areas:
+
+### Resizable Areas
+
+```typescript
+// Create a standard resizable area
+const area = space.createResizableArea();
+```
+
+### Drawable Areas
+
+```typescript
+import { DrawableSetupOptions } from '@mpalix86/elastic-box';
+
+const options: DrawableSetupOptions = {
+  turnInResizableArea: true,  // Convert to resizable area after drawing
+  persist: false  // When true, fixes the drawn area without converting it to resizable
+};
+
+// Create an area by drawing it
+const drawableArea = space.createDrawableArea(options);
+```
+
+## Element Detection
+
+Areas can detect elements underneath them:
+
+```typescript
+// Detect elements under an area matching a specific CSS selector
+const elements = area.detectElementsUnderArea('default', '.wrapper');
+console.log(elements);
+```
 
 ## Complete Events Reference
 
@@ -52,7 +104,6 @@ Areas emit various events that you can listen to for interaction. Here's a compl
 | `resize` | Emitted continuously during resizing |
 | `resize-end` | Emitted at the end of a resize operation |
 | `move` | Emitted during area movement |
-
 
 ## Example
 
@@ -109,14 +160,110 @@ function setupAreaListeners(area) {
 }
 ```
 
+## Advanced Example
 
+Here's a complete example demonstrating custom styles, drawable areas, and element detection:
+
+```typescript
+import {Space, Area, ResizableCustomStyle, DrawableSetupOptions} from '@mpalix86/elastic-box';
+
+// Select DOM elements with existence check
+const container = document.querySelector('#mainDiv') as HTMLDivElement;
+const button = document.querySelector('#newDiv');
+const getEls = document.querySelector('#getElements');
+const draw = document.querySelector('#newDraw');
+
+// Verify elements exist
+if (!container) throw new Error('Container element #mainDiv not found');
+if (!button) throw new Error('Button element #newDiv not found');
+if (!getEls) throw new Error('Get elements button not found');
+
+// Define custom style
+const customStyle: ResizableCustomStyle = {
+  resizable: {
+    backgroundColor: 'transparent',
+    border: '2px solid white',
+    height: '200px',
+    width: '300px',
+    minHeight: '100px',
+    minWidth: '100px'
+  }
+};
+
+// Initialize space with custom style
+const space = new Space(container, customStyle);
+
+// Configure drawable area options
+const options: DrawableSetupOptions = {
+  turnInResizableArea: true,
+  persist: false  // When set to true, the area will be fixed after drawing without becoming resizable
+};
+
+// Create drawable area on button click
+draw.addEventListener('click', () => {
+  const area = space.createDrawableArea(options);
+});
+
+// Variables for area management
+let area: Area;
+let select;
+
+// Element detection feature
+getEls.addEventListener('click', () => {
+  const els = area.detectElementsUnderArea('default', '.wrapper');
+  console.log(els);
+});
+
+// Create new resizable area on button click
+button.addEventListener('click', () => {
+  area = space.createResizableArea();
+  
+  // Setup event handlers
+  select = e => {
+    const area = e.target;
+    const resizableEl = area.getResizable();
+    resizableEl.style.backgroundColor = 'blue';
+  };
+
+  // Set up all event listeners
+  area.on('select', select);
+  area.on('deselect', e => {
+    const area = e.target;
+    const resizableEl = area.getResizable();
+    resizableEl.style.backgroundColor = 'red';
+  });
+  
+  area.on('before-delete', () => {
+    console.log('before delete');
+  });
+  area.on('after-delete', () => {
+    console.log('afterdelete');
+  });
+  
+  area.on('resize', e => {
+    console.log('resize', e);
+  });
+  area.on('resize-start', e => {
+    console.log('resize-start', e);
+  });
+  area.on('resize-end', e => {
+    console.log('resize-end', e);
+  });
+  
+  area.on('move', e => {
+    console.log('move', e);
+  });
+});
+```
 
 ## Main Methods
 
 ### Space
-- `createArea()`: Creates a new area within the space
+- `createResizableArea()`: Creates a new resizable area within the space
+- `createDrawableArea(options)`: Creates a new area by drawing it with mouse
 
 ### Area
 - `getResizable()`: Returns the resizable DOM element of the area
+- `detectElementsUnderArea(mode, selector)`: Detects elements under the area matching the selector
 - `on(event, callback)`: Adds a listener for the specified event
-- `off(event, callback)`: Removes a listener for the specified event (not implemented yet )
+- `off(event, callback)`: Removes a listener for the specified event (not implemented yet)

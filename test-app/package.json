@@ -12,6 +12,6 @@
     "vite": "^6.2.0"
   },
   "dependencies": {
-    "@MPalix86/elastic-box": "file:MPalix86-elastic-box-1.0.0.tgz"
+    "@MPalix86/elastic-box": "file:MPalix86-elastic-box-1.1.0.tgz"
   }
 }

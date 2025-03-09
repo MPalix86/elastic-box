@@ -1,8 +1,8 @@
 
-import {Space, Area, CustomStyle, DrawableSetupOptions} from '@MPalix86/elastic-box';
+import {Space, Area, ResizableCustomStyle, DrawableSetupOptions} from '@MPalix86/elastic-box';
 
 // Seleziona gli elementi DOM con controllo di esistenza
-const container = document.querySelector('#mainDiv');
+const container = document.querySelector('#mainDiv') as HTMLDivElement;
 const button = document.querySelector('#newDiv');
 const getEls = document.querySelector('#getElements');
 const draw = document.querySelector('#newDraw');
@@ -14,7 +14,7 @@ if (!getEls) throw new Error('Remove button element #remove not found');
 
   
 
-const customStyle : CustomStyle = {
+const customStyle : ResizableCustomStyle = {
   resizable : {
     backgroundColor : 'transparent',
     border : '2px solid white',
@@ -27,7 +27,7 @@ const customStyle : CustomStyle = {
 
 
 // Inizializzazione dello spazio
-// @ts-ignore
+
 const space = new Space(container, customStyle);
 console.log('new space created');
 
@@ -40,30 +40,6 @@ const options : DrawableSetupOptions = {
 draw.addEventListener('click',() =>{
   const area = space.createDrawableArea(options)
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Dichiarazione delle variabili
@@ -84,46 +60,46 @@ button.addEventListener('click', () => {
   area = space.createResizableArea();
   console.log('new area created');
 
-  // // Handler per l'evento select
-  // select = e => {
-  //   const area = e.target;
-  //   const resizableEl = area.getResizable();
-  //   resizableEl.style.backgroundColor = 'blue';
-  // };
+  // Handler per l'evento select
+  select = e => {
+    const area = e.target;
+    const resizableEl = area.getResizable();
+    resizableEl.style.backgroundColor = 'blue';
+  };
 
 
-  // // Eventi di selezione
-  // area.on('select', select);
-  // area.on('deselect', e => {
-  //   const area = e.target;
-  //   const resizableEl = area.getResizable();
-  //   resizableEl.style.backgroundColor = 'red';
-  // });
+  // Eventi di selezione
+  area.on('select', select);
+  area.on('deselect', e => {
+    const area = e.target;
+    const resizableEl = area.getResizable();
+    resizableEl.style.backgroundColor = 'red';
+  });
 
 
-  // // Eventi di eliminazione
-  // area.on('before-delete', () => {
-  //   console.log('before delete');
-  // });
-  // area.on('after-delete', () => {
-  //   console.log('afterdelete');
-  // });
+  // Eventi di eliminazione
+  area.on('before-delete', () => {
+    console.log('before delete');
+  });
+  area.on('after-delete', () => {
+    console.log('afterdelete');
+  });
 
 
-  // // Eventi di ridimensionamento
-  // area.on('resize', e => {
-  //   console.log('resize', e);
-  // });
-  // area.on('resize-start', e => {
-  //   console.log('resize-start', e);
-  // });
-  // area.on('resize-end', e => {
-  //   console.log('resize-end', e);
-  // });
+  // Eventi di ridimensionamento
+  area.on('resize', e => {
+    console.log('resize', e);
+  });
+  area.on('resize-start', e => {
+    console.log('resize-start', e);
+  });
+  area.on('resize-end', e => {
+    console.log('resize-end', e);
+  });
 
 
-  // // Eventi di movimento
-  // area.on('move', e => {
-  //   console.log('move', e);
-  // });
+  // Eventi di movimento
+  area.on('move', e => {
+    console.log('move', e);
+  });
 });
