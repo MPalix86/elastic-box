@@ -6,18 +6,16 @@ import { CreateMode } from './space';
 import createResizableStyles, { ResizableCustomStyle } from '../styles/resizable-area-style';
 import transitions from '../styles/transitions';
 
-
 /**
  * Area class represents a resizable and draggable area within a container
  */
 export default class Area {
- 
   private _resizable: HTMLDivElement = document.createElement('div');
   private _areaOptions: HTMLDivElement = document.createElement('div');
   private _deleteButton: HTMLButtonElement = document.createElement('button');
   private _confirmButton: HTMLButtonElement = document.createElement('button');
   private _eventListeners: Map<AreaEvents | string, Set<(event: BaseAreaEvent) => void>> = new Map();
-  private _customStyle : any
+  private _customStyle: any;
   // @ts-ignore
   protected _id: string;
   protected _space: Space;
@@ -35,17 +33,16 @@ export default class Area {
    * Creates a new Area instance
    * @param space The parent Space object that contains this area
    */
-  constructor(space: Space,  style ?: ResizableCustomStyle) {
+  constructor(space: Space, style?: ResizableCustomStyle) {
     this._space = space;
 
-    if(style) this._customStyle = createResizableStyles(style)
-    else this._customStyle = createResizableStyles(this._space.getResizableCustomStyle())
+    if (style) this._customStyle = createResizableStyles(style);
+    else this._customStyle = createResizableStyles(this._space.getResizableCustomStyle());
     this._container = space.getContainer();
     this._id = `${space.getTotalAreas()}}`;
-    this._space.setCreateMode(CreateMode.resizableArea) // this enable the global listeners on space to listen for resize of area
+    this._space.setCreateMode(CreateMode.resizableArea); // this enable the global listeners on space to listen for resize of area
     this._createNewResizableDiv();
   }
-
 
   /**
    * Returns the current state of the area
@@ -94,58 +91,71 @@ export default class Area {
     if (set.delete(callback)) console.log('evento elminato');
   }
 
-
-  detectElementsUnderArea(precision?: number | 'default', selector ?:string, ) {
-
+  detectElementsUnderArea(precision?: number | 'default', selector?: string) {
     const movableRect = this._resizable.getBoundingClientRect();
     const container = this._container.getBoundingClientRect();
-    
+
     const height = movableRect.height;
     const width = movableRect.width;
-  
-    
-    if (precision == undefined) precision = 0.25;
-    else if(precision == 'default') precision = 0.25
-    else precision = 1 / Math.abs(precision)
 
+    // Set precision with proper defaults
+    if (precision === undefined || precision === 'default') {
+      precision = 0.25;
+    } else {
+      precision = 1 / Math.abs(precision);
+    }
+
+    // Add corner points first
     const testPoints = [
-      { x: movableRect.left, y: movableRect.top }, // Angolo in alto a sinistra
-      { x: movableRect.right, y: movableRect.top }, // Angolo in alto a destra
-      { x: movableRect.right, y: movableRect.bottom }, // Angolo in basso a destra
-      { x: movableRect.left, y: movableRect.bottom } // Angolo in basso a sinistra
+      { x: movableRect.left, y: movableRect.top }, // Top-left corner
+      { x: movableRect.right, y: movableRect.top }, // Top-right corner
+      { x: movableRect.right, y: movableRect.bottom }, // Bottom-right corner
+      { x: movableRect.left, y: movableRect.bottom }, // Bottom-left corner
     ];
-    
-    
-    // Add more points for greater accuracy
-    for (let i = 0; i <= width; i += width * precision) {
-      for(let j = 0; j <= height ; j+= height * precision){
-        const x = movableRect.left + i
-        const y = movableRect.top  + j
 
-        const relativeX = x - container.left
-        const relativeY = y - container.top
-        testPoints.push({x:relativeX , y:relativeY})
-        
+    // Calculate the step size based on precision and dimensions
+    const stepX = width * precision;
+    const stepY = height * precision;
+
+    // Limit the maximum number of points to prevent browser freezing
+    const maxPointsPerDimension = 20;
+    const actualStepX = Math.max(stepX, width / maxPointsPerDimension);
+    const actualStepY = Math.max(stepY, height / maxPointsPerDimension);
+
+    // Add more points for greater accuracy, but with a reasonable limit
+    for (let i = 0; i <= width; i += actualStepX) {
+      for (let j = 0; j <= height; j += actualStepY) {
+        // Skip the very first point (0,0) as it's already in the corners array
+        if (i === 0 && j === 0) continue;
+
+        const x = movableRect.left + i;
+        const y = movableRect.top + j;
+
+        const relativeX = x - container.left;
+        const relativeY = y - container.top;
+
+        testPoints.push({ x: relativeX, y: relativeY });
       }
     }
-    
-    
+
     // Map to count how many test points are inside each wrapper
     const elementHits = new Map();
-    
+
     // Use elementFromPoint for each test point
     testPoints.forEach(point => {
       // Get the element at the current position
       const element = document.elementFromPoint(point.x, point.y);
-      
+
       if (element) {
         // Find the nearest wrapper by traversing up the DOM
         let searched = null;
-        
-        if(selector) searched = element.closest(selector)
-        else searched = element
 
-        
+        if (selector) {
+          searched = element.closest(selector);
+        } else {
+          searched = element;
+        }
+
         // If we found a wrapper, increment the count
         if (searched) {
           const hits = elementHits.get(searched) || 0;
@@ -153,7 +163,7 @@ export default class Area {
         }
       }
     });
-    
+
     // Convert the map to an array of elements
     const elementsUnder = Array.from(elementHits.entries())
       .filter(([_, hits]) => hits > 0) // Remove elements without hits
@@ -162,12 +172,11 @@ export default class Area {
         element,
         hits,
       }));
-    
+
     return elementsUnder;
   }
 
-
-  createResizableArea(){
+  createResizableArea() {
     this._createNewResizableDiv();
   }
 
@@ -219,13 +228,12 @@ export default class Area {
   private _createNewResizableDiv(): void {
     this._resizable.classList.add('resizable');
 
-  
-    const resizableStyles  = this._customStyle.elements.resizable;
-    const areaOptionsStyle =this._customStyle.elements.areaOptions;
+    const resizableStyles = this._customStyle.elements.resizable;
+    const areaOptionsStyle = this._customStyle.elements.areaOptions;
     const deleteButtonStyle = this._customStyle.elements.deleteButton;
     const confirmButtonStyle = this._customStyle.elements.confirmButton;
 
-    console.log('style prima ',  this._customStyle.elements)
+    console.log('style prima ', this._customStyle.elements);
 
     this._resizable.classList.add(resizableStyles.class);
     this._areaOptions.classList.add(areaOptionsStyle.class);
@@ -262,12 +270,12 @@ export default class Area {
     this._deleteButton.addEventListener('click', this._boundDelete);
     this._confirmButton.addEventListener('click', this._boundConfirm);
 
-    /** 
+    /**
      * we need to store left and top property directly into the elment style
      * because all next calculation are based on this property!
      */
-    this._resizable.style.left = resizableStyles.style.left
-    this._resizable.style.top = resizableStyles.style.top
+    this._resizable.style.left = resizableStyles.style.left;
+    this._resizable.style.top = resizableStyles.style.top;
   }
 
   _preventAreaOptionTrigger(e: MouseEvent) {
@@ -294,28 +302,34 @@ export default class Area {
     this._state.prunable = true;
     this._resizable.classList.add(transitions.shrinkKeyframe);
 
-  
     // Attendi che l'animazione sia completata prima di rimuovere l'elemento
-    this._resizable.addEventListener('animationend', () => {
-      this._container.removeChild(this._resizable);
-      this._space.prune(); // TODO aggiustre il discorso dei prune
-      this._executeListeners(AreaEvents.AfterDelete);
-      this._space.setCreateMode(CreateMode.none)
-    }, { once: true });
+    this._resizable.addEventListener(
+      'animationend',
+      () => {
+        this._container.removeChild(this._resizable);
+        this._space.prune(); // TODO aggiustre il discorso dei prune
+        this._executeListeners(AreaEvents.AfterDelete);
+        this._space.setCreateMode(CreateMode.none);
+      },
+      { once: true }
+    );
   }
 
   private _confirm() {
-
     this._executeListeners(AreaEvents.Confirmed);
 
     this._resizable.classList.add(transitions.confirmKeyframe);
 
     // Attendi che l'animazione sia completata prima di rimuovere l'elemento
-    this._resizable.addEventListener('animationend', () => {
+    this._resizable.addEventListener(
+      'animationend',
+      () => {
         this._unboundlisteners();
-      this._resizable.removeChild(this._areaOptions);
-      this._resizable.style.cursor ='default'
-    }, { once: true });
+        this._resizable.removeChild(this._areaOptions);
+        this._resizable.style.cursor = 'default';
+      },
+      { once: true }
+    );
   }
 
   /**
