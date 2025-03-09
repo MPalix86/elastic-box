@@ -13,7 +13,7 @@ npm install @__pali__/elastic-box
 
 ## Example Image
 
-![Example Image](./documentation/elastic-box.gif)
+![Example Image](https://github.com/MPalix86/elastic-box/raw/main/documentation/elastic-box.gif?raw=true)
 
 
 ## Basic Usage
