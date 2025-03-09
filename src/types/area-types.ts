@@ -1,4 +1,5 @@
 import Area from '../models/area';
+import { DrawableCustomStyle } from '../styles/drawable-area-style';
 
 export const enum AreaEvents {
   ResizeStart = 'resize-start',
@@ -20,4 +21,12 @@ export interface BaseAreaEvent {
   width?: number;
   height?: number;
   side?: string;
+}
+
+
+export interface DrawableSetupOptions{
+  persist ?: boolean,
+  turnInResizableArea ?: boolean,
+  customStyle ?: DrawableCustomStyle
+  
 }

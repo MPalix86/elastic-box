@@ -1,7 +1,15 @@
 import Area from './area';
 import Commons from '../types/commons';
-import { AreaEvents } from '../types/area-events';
-import { CustomStyle } from '../styles/area-style';
+import { AreaEvents, DrawableSetupOptions } from '../types/area-types';
+import { ResizableCustomStyle } from '../styles/resizable-area-style';
+import DrawableArea from './drawable-area';
+import { cloneDeep } from 'lodash';
+
+export enum CreateMode {
+  resizableArea  = 'resizableArea',
+  drawableArea = 'drawableArea', 
+  none = 'noe'
+}
 
 /**
  * The Space class manages a container of resizable and movable areas
@@ -16,22 +24,25 @@ export default class Space {
   private _container: HTMLElement;
 
   // Unique identifier for this space
-  // @ts-expect-error: id non utilizzato ma mantenuto per futura implementazione
   private _id?: string;
 
   // Counter for total areas created in this space
   private _totalAreaCreatedInSpace = 0;
 
-  private _customSyle: CustomStyle  = {}
+  private _resizableCustomSyle: ResizableCustomStyle  = {}
 
-  /**
+  private _drawableAreas: DrawableArea[] = [];
+
+  private _createMode : CreateMode
+
+ /**
    * Creates a new Space with the given container
    * @param container HTML element that will contain the areas
    */
-  constructor(container: HTMLElement, customStyle :CustomStyle = {} ) {
+  constructor(container: HTMLElement, resizableCustomStyle :ResizableCustomStyle = {} ) {
     this._container = container;
     this._createSpace();
-    this._customSyle = customStyle
+    this._resizableCustomSyle = resizableCustomStyle
   }
 
   /**
@@ -39,6 +50,7 @@ export default class Space {
    */
   public prune(): void {
     this._areas = this._areas.filter(a => !a.getState().prunable);
+    this._drawableAreas = this._drawableAreas.filter(a => !a.getState().prunable)
     console.log('areas ', this._areas);
   }
   
@@ -47,16 +59,29 @@ export default class Space {
    * Creates a new area in this space
    * @returns The newly created area
    */
-  public createArea(): Area {
+  public createResizableArea(customStyle?: ResizableCustomStyle): Area {
+    let style : ResizableCustomStyle
     this._totalAreaCreatedInSpace++;
-    const area = new Area(this);
+    if(customStyle) style = customStyle
+    const area = new Area(this,style);
     this._areas.push(area);
     return area;
   }
 
+  public createDrawableArea(options : DrawableSetupOptions){
+    this._totalAreaCreatedInSpace++;
+    const drawableArea = new DrawableArea(this, options)
+    this._drawableAreas.push(drawableArea)
+  }
 
-  public getCustomStyle(){
-    return this._customSyle
+
+  public setCreateMode(val :CreateMode ){
+    this._createMode = val
+  }
+
+
+  public getResizableCustomStyle(){
+    return this._resizableCustomSyle
 
   }
 
@@ -78,16 +103,28 @@ export default class Space {
   /** 
    * set custom style
    */
-  public setDefaultStyle(customStyle : CustomStyle){
-    this._customSyle = customStyle
+  public setDefaultResizableStyle(customStyle : ResizableCustomStyle){
+    this._resizableCustomSyle = customStyle
   }
 
   /**
    * Finds the currently selected area, if any
    * @returns The selected area or undefined if none is selected
    */
+
+  // TODO aggiustare la distinzione tra selectedArea e active Area
+  // le aree selezionate possono essere n 
+  //  l'area attiva è una ! 
   private _findSelectedArea(): Area | undefined {
     return this._areas.find(a => a.getState().isThisAreaSelected);
+  }
+
+  /**
+   * Finds the currently selected area, if any
+   * @returns The selected area or undefined if none is selected
+   */
+  private _findActivedDrawableArea(): DrawableArea | undefined {
+    return this._drawableAreas.find(a => a.getState().isActive);
   }
 
   /**
@@ -104,6 +141,35 @@ export default class Space {
    * Manages resizing and movement of the selected area
    */
   private async _mouseMove(e: MouseEvent): Promise<void> {
+    const mode = this._createMode
+    if(mode == CreateMode.resizableArea)this._resizeAreaMouseMove(e)
+    else if (mode == CreateMode.drawableArea)this._drawAreaMouseMove(e)
+    return
+  }
+
+  /**
+   * Handles mouse down events in the space
+   * Sets appropriate resize or movement flags for the selected area
+   */
+  private _mouseDown(e: MouseEvent): void {
+    const mode = this._createMode;
+    if (mode == CreateMode.resizableArea) this._resizeAreaMouseDown(e);
+    else if (mode == CreateMode.drawableArea) this._drawAreaMouseDown(e);
+  }
+
+  /**
+   * Handles mouse up events in the space
+   * Deselects the current area
+   */
+  private _mouseUp(e: MouseEvent): void {
+    const mode = this._createMode;
+    if (mode == CreateMode.resizableArea) this._resizeAreaMouseUp(e);
+    else if (mode == CreateMode.drawableArea) this._drawAreamouseUp(e);
+  }
+
+
+  private _resizeAreaMouseMove(e:MouseEvent){
+    
     const area = this._findSelectedArea();
 
     if (!area) return;
@@ -162,13 +228,11 @@ export default class Space {
 
 
     
+  
   }
 
-  /**
-   * Handles mouse down events in the space
-   * Sets appropriate resize or movement flags for the selected area
-   */
-  private _mouseDown(e: MouseEvent): void {
+  private _resizeAreaMouseDown(e:MouseEvent){
+    
     const area = this._findSelectedArea();
     if (!area) return;
 
@@ -181,16 +245,125 @@ export default class Space {
     }
 
     e.preventDefault();
+  
   }
 
-  /**
-   * Handles mouse up events in the space
-   * Deselects the current area
-   */
-  private _mouseUp(): void {
+
+  private _resizeAreaMouseUp(e:MouseEvent){
     const area = this._findSelectedArea();
     if (!area) return;
 
     area.deselect();
   }
+  private _drawAreaMouseDown(e: MouseEvent) {
+    const containerRect = this._container.getBoundingClientRect();
+    const drawable = this._findActivedDrawableArea();
+    
+    if (!drawable) return; // Protezione contro nullable
+    
+    const style = drawable.getStyle();
+    const state = drawable.getState();
+    state.isMouseDown = true;
+    drawable.startDraw();
+    
+    
+    
+    // Calcola le coordinate relative al container con l'offset
+    const relativeX = e.clientX - containerRect.left - state.dinstanceFromPointer;
+    const relativeY = e.clientY - containerRect.top - state.dinstanceFromPointer;
+    
+    // Salva i valori iniziali
+    state.startX = relativeX;
+    state.startY = relativeY;
+    
+    // Salva le coordinate client iniziali
+    state.startClientX = e.clientX;
+    state.startClientY = e.clientY;
+    
+    // Posiziona l'elemento drawable con l'offset
+    style.left = `${relativeX}px`;
+    style.top = `${relativeY}px`;
+    style.width = '0px'; // Inizia con larghezza zero
+    style.height = '0px'; // Inizia con altezza zero
+    
+    console.log('Drawable area state on mouse down:', state);
+  }
+  
+  private _drawAreaMouseMove(e: MouseEvent) {
+    if (e.button != 0) return;
+    
+    const drawable = this._findActivedDrawableArea();
+    if (!drawable) return;
+    
+    const style = drawable.getStyle();
+    const state = drawable.getState();
+    if (!state.isMouseDown) return;
+    
+    // Usa clientX/Y per coerenza con mouseDown
+    const currentX = e.clientX;
+    const currentY = e.clientY;
+    
+    // Considera gli offset nel calcolo delle dimensioni
+    let width = Math.abs(currentX - state.startClientX);
+    let height = Math.abs(currentY - state.startClientY);
+    
+    // Gestisci il disegno in qualsiasi direzione considerando gli offset
+    if (currentX < state.startClientX) {
+      style.left = `${state.startX - width}px`;
+    } else {
+      style.left = `${state.startX}px`;
+    }
+    
+    if (currentY < state.startClientY) {
+      style.top = `${state.startY - height}px`;
+    } else {
+      style.top = `${state.startY}px`;
+    }
+    
+    // Aggiorna lo stato e lo stile
+    state.width = width;
+    state.height = height;
+    style.width = `${width}px`;
+    style.height = `${height}px`;
+  }
+  
+  private _drawAreamouseUp(e: MouseEvent) {
+    const drawable = this._findActivedDrawableArea();
+    if (!drawable) return;
+    
+    const state = drawable.getState();
+    if (!state.isMouseDown) return; // Non fare nulla se non era in disegno
+    
+    state.isMouseDown = false;
+    drawable.endDrawing();
+    
+    // Ottieni la posizione e dimensione correnti dallo stile
+    const style = drawable.getStyle();
+    const left = parseInt(style.left, 10) || state.startX;
+    const top = parseInt(style.top, 10) || state.startY;
+    const width = parseInt(style.width, 10) || 0;
+    const height = parseInt(style.height, 10) || 0;
+    
+    // Ignora se troppo piccolo
+    if (width < 5 || height < 5) {
+      const options = drawable.getSetupOptions();
+      if (!options.persist) this._container.removeChild(drawable.getDrawable());
+      return;
+    }
+    
+    const options = drawable.getSetupOptions();
+    if (!options.persist) this._container.removeChild(drawable.getDrawable());
+    if (options.turnInResizableArea) {
+     const resizableStyle =  structuredClone(this._resizableCustomSyle)
+      resizableStyle.resizable = resizableStyle.resizable || {};
+      resizableStyle.resizable.width = `${width}px`;
+      resizableStyle.resizable.height = `${height}px`;
+      resizableStyle.resizable.left =  `${left}px`;
+      resizableStyle.resizable.top = `${top}px`;
+      const area = this.createResizableArea(resizableStyle);
+      drawable.setResizable(area)
+    }
+  }
+
+  
 }

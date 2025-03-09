@@ -1,23 +1,18 @@
 
-import {Space, Area, CustomStyle} from '@MPalix86/elastic-box';
+import {Space, Area, CustomStyle, DrawableSetupOptions} from '@MPalix86/elastic-box';
 
 // Seleziona gli elementi DOM con controllo di esistenza
 const container = document.querySelector('#mainDiv');
 const button = document.querySelector('#newDiv');
 const getEls = document.querySelector('#getElements');
+const draw = document.querySelector('#newDraw');
 
 // Verifica che gli elementi esistano
 if (!container) throw new Error('Container element #mainDiv not found');
 if (!button) throw new Error('Button element #newDiv not found');
 if (!getEls) throw new Error('Remove button element #remove not found');
 
-console.dir( Space);
-console.dir('Tipo di Space:', typeof Space);
-console.log('Container:', container);
-
-// Dichiarazione delle variabili
-let area : Area;
-let select;
+  
 
 const customStyle : CustomStyle = {
   resizable : {
@@ -30,10 +25,52 @@ const customStyle : CustomStyle = {
   }
 }
 
+
 // Inizializzazione dello spazio
 // @ts-ignore
 const space = new Space(container, customStyle);
 console.log('new space created');
+
+const options : DrawableSetupOptions = {
+  // persist : true,
+  turnInResizableArea:true
+}
+
+// @ts-ignore
+draw.addEventListener('click',() =>{
+  const area = space.createDrawableArea(options)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Dichiarazione delle variabili
+let area : Area;
+let select;
+
+
 
 
 getEls.addEventListener('click', () => {
@@ -44,7 +81,7 @@ getEls.addEventListener('click', () => {
 // Listener per creare una nuova area
 button.addEventListener('click', () => {
 
-  area = space.createArea();
+  area = space.createResizableArea();
   console.log('new area created');
 
   // // Handler per l'evento select
