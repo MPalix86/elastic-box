@@ -10,6 +10,12 @@ You need to setup your package.json in order to use GitHub Packages as repositor
 npm install @__pali__/elastic-box
 ```
 
+
+## Example Image
+
+![Example Image](./documentation/elastic-box.gif)
+
+
 ## Basic Usage
 
 ```typescript
