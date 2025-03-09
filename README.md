@@ -84,10 +84,10 @@ const drawableArea = space.createDrawableArea(options);
 
 ## Element Detection
 
-Areas can detect elements underneath them:
+Resizable areas can detect elements underneath them (this feature is currently only available for resizable areas):
 
 ```typescript
-// Detect elements under an area matching a specific CSS selector
+// Detect elements under a resizable area matching a specific CSS selector
 const elements = area.detectElementsUnderArea('default', '.wrapper');
 console.log(elements);
 ```
@@ -264,6 +264,8 @@ button.addEventListener('click', () => {
 
 ### Area
 - `getResizable()`: Returns the resizable DOM element of the area
-- `detectElementsUnderArea(mode, selector)`: Detects elements under the area matching the selector
 - `on(event, callback)`: Adds a listener for the specified event
 - `off(event, callback)`: Removes a listener for the specified event (not implemented yet)
+
+### Resizable Area
+- `detectElementsUnderArea(mode, selector)`: Detects elements under the resizable area matching the selector (only available for resizable areas)
