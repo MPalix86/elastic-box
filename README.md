@@ -7,13 +7,13 @@ Elastic-Box is a JavaScript/TypeScript library for creating dynamic layouts with
 You need to setup your package.json in order to use GitHub Packages as repository
 
 ```bash
-npm install @mpalix86/elastic-box
+npm install @__pali__/elastic-box
 ```
 
 ## Basic Usage
 
 ```typescript
-import { Space, Area } from '@mpalix86/elastic-box';
+import { Space, Area } from '@__pali__/elastic-box';
 
 // Initialize a space within a container
 const container = document.querySelector('#mainDiv');
@@ -41,7 +41,7 @@ button.addEventListener('click', () => {
 You can customize the appearance of resizable areas by providing a custom style configuration:
 
 ```typescript
-import { Space, ResizableCustomStyle } from '@mpalix86/elastic-box';
+import { Space, ResizableCustomStyle } from '@__pali__/elastic-box';
 
 const customStyle: ResizableCustomStyle = {
   resizable: {
@@ -113,7 +113,7 @@ console.log(visibleElements);
 ### Drawable Areas
 
 ```typescript
-import { DrawableSetupOptions } from '@mpalix86/elastic-box';
+import { DrawableSetupOptions } from '@__pali__/elastic-box';
 
 const options: DrawableSetupOptions = {
   turnInResizableArea: true,  // Convert to resizable area after drawing
@@ -191,7 +191,7 @@ function setupAreaListeners(area) {
 Here's a complete example demonstrating custom styles, drawable areas, and element detection:
 
 ```typescript
-import {Space, Area, ResizableCustomStyle, DrawableSetupOptions} from '@mpalix86/elastic-box';
+import {Space, Area, ResizableCustomStyle, DrawableSetupOptions} from '@__pali__/elastic-box';
 
 // Select DOM elements with existence check
 const container = document.querySelector('#mainDiv') as HTMLDivElement;
