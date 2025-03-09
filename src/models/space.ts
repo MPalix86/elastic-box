@@ -68,10 +68,11 @@ export default class Space {
     return area;
   }
 
-  public createDrawableArea(options : DrawableSetupOptions){
+  public createDrawableArea(options : DrawableSetupOptions) : DrawableArea{
     this._totalAreaCreatedInSpace++;
     const drawableArea = new DrawableArea(this, options)
     this._drawableAreas.push(drawableArea)
+    return drawableArea
   }
 
 
