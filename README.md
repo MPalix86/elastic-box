@@ -4,7 +4,6 @@ Elastic-Box is a JavaScript/TypeScript library for creating dynamic layouts with
 
 ## Installation
 
-You need to setup your package.json in order to use GitHub Packages as repository
 
 ```bash
 npm install @__pali__/elastic-box
