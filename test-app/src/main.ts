@@ -199,13 +199,13 @@ class ElasticBoxDemo {
           }
         }
       }, 500);
-      
+  
       // Set a timeout to stop checking after a reasonable period
       setTimeout(() => {
         clearInterval(checkForResizable);
         if (this.isDrawing) {
           this.isDrawing = false;
-          this.createDrawableBtn.textContent = 'Create Drawable Area';
+        this.createDrawableBtn.textContent = 'Create Drawable Area';
           this.createDrawableBtn.classList.remove('active');
           this.createDrawableBtn.disabled = false; // Re-enable the button
           this.logStatus('Drawing timeout - Reset drawable state');

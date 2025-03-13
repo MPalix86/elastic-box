@@ -12,6 +12,6 @@
     "vite": "^6.2.0"
   },
   "dependencies": {
-    "@__pali__/elastic-box": "file:__pali__-elastic-box-1.1.8.tgz"
+    "@__pali__/elastic-box": "file:__pali__-elastic-box-1.1.10.tgz"
   }
 }

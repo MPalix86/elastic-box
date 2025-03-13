@@ -5,6 +5,7 @@ import Space from './space';
 import { CreateMode } from './space';
 import createResizableStyles, { ResizableCustomStyle } from '../styles/resizable-area-style';
 import transitions from '../styles/transitions';
+import { style } from 'typestyle';
 
 /**
  * Area class represents a resizable and draggable area within a container
@@ -274,8 +275,14 @@ export default class Area {
      * we need to store left and top property directly into the elment style
      * because all next calculation are based on this property!
      */
-    this._resizable.style.left = resizableStyles.style.left;
-    this._resizable.style.top = resizableStyles.style.top;
+
+    const containerScrollLeft = this._container.scrollLeft.valueOf()
+    const containerScrollTop = this._container.scrollTop.valueOf()
+    const scrollLeft = +resizableStyles.style.left.split(`px`)[0] + containerScrollLeft
+    const scrollTop = +resizableStyles.style.top.split(`px`)[0] + containerScrollTop
+
+    this._resizable.style.left = scrollLeft +`px`
+    this._resizable.style.top = scrollTop + `px`
   }
 
   _preventAreaOptionTrigger(e: MouseEvent) {
