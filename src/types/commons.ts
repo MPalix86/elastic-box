@@ -1,3 +1,4 @@
+import { AreaState } from "../models/area-state";
 
 
 // Definition of interfaces and types
@@ -140,25 +141,25 @@ const waitUntilCondition = <T, U>(condition: () => boolean, controlRate: number,
  * @param element HTML element on which to set the cursor
  * @param state State containing position information
  */
-const updateCursor = (element: HTMLElement, state: State): void => {
-  const { left, right, top, bottom } = state.position;
+const updateCursor = (element: HTMLElement, state: AreaState): void => {
+  const { isLeftEdge, isRightEdge, isTopEdge, isBottomEdge} = state.position;
 
   // determines cursor type based on position
-  if (top && right) {
+  if (isTopEdge && isRightEdge) {
     element.style.cursor = cursors.NE_RESIZE;
-  } else if (top && left) {
+  } else if (isTopEdge && isLeftEdge) {
     element.style.cursor = cursors.NW_RESIZE;
-  } else if (bottom && right) {
+  } else if (isBottomEdge && isRightEdge) {
     element.style.cursor = cursors.SE_RESIZE;
-  } else if (bottom && left) {
+  } else if (isBottomEdge && isLeftEdge) {
     element.style.cursor = cursors.SW_RESIZE;
-  } else if (bottom) {
+  } else if (isBottomEdge) {
     element.style.cursor = cursors.S_RESIZE;
-  } else if (right) {
+  } else if (isRightEdge) {
     element.style.cursor = cursors.E_RESIZE;
-  } else if (left) {
+  } else if (isLeftEdge) {
     element.style.cursor = cursors.W_RESIZE;
-  } else if (top) {
+  } else if (isTopEdge) {
     element.style.cursor = cursors.N_RESIZE;
   } else {
     element.style.cursor = cursors.MOVE;

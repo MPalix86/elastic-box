@@ -1,9 +1,9 @@
 import Area from './area';
 import Commons from '../types/commons';
-import { AreaEvents, DrawableSetupOptions } from '../types/area-types';
 import { ResizableCustomStyle } from '../styles/resizable-area-style';
 import DrawableArea from './drawable-area';
-import { cloneDeep } from 'lodash';
+import { DrawableSetupOptions } from '@__pali__/elastic-box';
+import { AreaEvents, DrawableAreaEvents } from '../types/area-types';
 
 export enum CreateMode {
   resizableArea = 'resizableArea',
@@ -50,7 +50,6 @@ export default class Space {
   public prune(): void {
     this._areas = this._areas.filter(a => !a.getState().prunable);
     this._drawableAreas = this._drawableAreas.filter(a => !a.getState().prunable);
-    console.log('areas ', this._areas);
   }
 
   /**
@@ -183,10 +182,10 @@ export default class Space {
       const position = area.getState().position;
 
       // Horizontal resize
-      if (position.right) {
+      if (position.isRightEdge) {
         newWidth = Math.max(Commons.RESIZE_OFFSET * 2, state.startWidth + deltaX);
         style.width = newWidth + 'px';
-      } else if (position.left) {
+      } else if (position.isLeftEdge) {
         newWidth = Math.max(Commons.RESIZE_OFFSET * 2, state.startWidth - deltaX);
         newLeft = state.startLeft + state.startWidth - newWidth;
         style.width = newWidth + 'px';
@@ -194,17 +193,22 @@ export default class Space {
       }
 
       // vertical resize
-      if (position.bottom) {
+      if (position.isBottomEdge) {
         newHeight = Math.max(Commons.RESIZE_OFFSET * 2, state.startHeight + deltaY);
         style.height = newHeight + 'px';
-      } else if (position.top) {
+      } else if (position.isTopEdge) {
         newHeight = Math.max(Commons.RESIZE_OFFSET * 2, state.startHeight - deltaY);
         newTop = state.startTop + state.startHeight - newHeight;
         style.height = newHeight + 'px';
         style.top = newTop + 'px';
       }
 
-      area._executeListeners(AreaEvents.Resize, newLeft, newTop, newWidth, newHeight);
+      state.left = newLeft
+      state.top = newTop
+      state.width = newWidth
+      state.height = newHeight
+
+      area._executeListeners(AreaEvents.Resize);
     } else if (state.enableMovement) {
       // Movement mode
       newLeft = state.startLeft + (e.clientX - state.startClientX);
@@ -212,7 +216,12 @@ export default class Space {
 
       style.left = newLeft + 'px';
       style.top = newTop + 'px';
-      area._executeListeners(AreaEvents.Move, newLeft, newTop, newWidth, newHeight);
+
+      state.left = newLeft;
+      state.top = newTop
+      state.width = newWidth;
+      state.height = newHeight;
+      area._executeListeners(AreaEvents.Move);
     }
   }
 
@@ -222,7 +231,7 @@ export default class Space {
 
     const state = area.getState();
 
-    if (state.position.left || state.position.right || state.position.top || state.position.bottom) {
+    if (state.position.isLeftEdge || state.position.isRightEdge || state.position.isTopEdge || state.position.isBottomEdge) {
       state.isResizing = true;
     } else {
       state.enableMovement = true;
@@ -269,7 +278,13 @@ export default class Space {
     style.width = '0px'; // Inizia con larghezza zero
     style.height = '0px'; // Inizia con altezza zero
 
-    console.log('Drawable area state on mouse down:', state);
+    state.left = relativeX;
+    state.top = relativeY;
+    state.width = 0
+    state.height = 0
+
+    drawable._executeListeners(DrawableAreaEvents.drawStart)
+
   }
 
   private _drawAreaMouseMove(e: MouseEvent) {
@@ -308,12 +323,17 @@ export default class Space {
     state.height = height;
     style.width = `${width}px`;
     style.height = `${height}px`;
+
+    drawable._executeListeners(DrawableAreaEvents.drawing)
+
+
+    
   }
 
   private _drawAreamouseUp(e: MouseEvent) {
     const drawable = this._findActivedDrawableArea();
     if (!drawable) return;
-
+    
     const state = drawable.getState();
     if (!state.isMouseDown) return; // Non fare nulla se non era in disegno
 
@@ -327,6 +347,12 @@ export default class Space {
     const width = parseInt(style.width, 10) || 0;
     const height = parseInt(style.height, 10) || 0;
 
+    state.left = left
+    state.top = top
+    state.height = height
+    state.width = width
+
+
     // Ignora se troppo piccolo
     if (width < 5 || height < 5) {
       const options = drawable.getSetupOptions();
@@ -334,8 +360,11 @@ export default class Space {
       return;
     }
 
+ 
+
+
     const options = drawable.getSetupOptions();
-    if (!options.persist) this._container.removeChild(drawable.getDrawable());
+
     if (options.turnInResizableArea) {
       const resizableStyle = structuredClone(this._resizableCustomSyle);
       resizableStyle.resizable = resizableStyle.resizable || {};
@@ -345,10 +374,23 @@ export default class Space {
       resizableStyle.resizable.top = `${top}px`;
       const area = this.createResizableArea(resizableStyle);
       drawable.setResizable(area);
+      state.isTurnedInResizable = true
+      this._container.removeChild(drawable.getDrawable())
+      drawable._executeListeners(DrawableAreaEvents.TurnedInResizable)
     }
+
+    else if (options.persist){
+      drawable._executeListeners(DrawableAreaEvents.Persisted)
+      state.isPersisted = true
+    } 
+    
+    else{
+      this._container.removeChild(drawable.getDrawable())
+    }
+
+    drawable._executeListeners(DrawableAreaEvents.drawEnd)
   }
 }
-
 
 
 

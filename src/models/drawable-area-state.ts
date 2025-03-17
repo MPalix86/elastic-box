@@ -1,6 +1,5 @@
 export default class DrawableAreaState {
-  private _isActive = false;
-  private _isSelected = false;
+
   private _startX: number;
   private _startY: number;
   private _startScreenX: number;
@@ -15,7 +14,11 @@ export default class DrawableAreaState {
   private _dinstanceFromPointer = 5;
   private _isMouseDown: boolean;
   private _isDrawing: boolean;
-  private _prunable = false
+  private _prunable = false;
+  private _isPersisted = false;
+  private _isTurnedInResizable = true;
+  private _isActive = false;
+  private _isSelected = false;
 
   get isActive(): boolean {
     return this._isActive;
@@ -143,5 +146,21 @@ export default class DrawableAreaState {
 
   set prunable(value: boolean) {
     this._prunable = value;
+  }
+
+  get isPersisted(): boolean {
+    return this._isPersisted;
+  }
+
+  set isPersisted(value: boolean) {
+    this._isPersisted = value;
+  }
+
+  get isTurnedInResizable(): boolean {
+    return this._isTurnedInResizable;
+  }
+
+  set isTurnedInResizable(value: boolean) {
+    this._isTurnedInResizable = value;
   }
 }

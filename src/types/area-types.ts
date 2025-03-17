@@ -1,4 +1,5 @@
 import Area from '../models/area';
+import DrawableArea from '../models/drawable-area';
 import { DrawableCustomStyle } from '../styles/drawable-area-style';
 
 export const enum AreaEvents {
@@ -13,9 +14,17 @@ export const enum AreaEvents {
   Confirmed = 'confirmed',
 }
 
+export const enum DrawableAreaEvents {
+  drawStart = 'draw-start',
+  drawing = 'drawing',
+  drawEnd = 'draw-end',
+  TurnedInResizable = 'turned-in-resizable',
+  Persisted = 'persisted',
+}
+
 export interface BaseAreaEvent {
-  type: AreaEvents;
-  target: Area;
+  type: AreaEvents | DrawableAreaEvents;
+  target: Area | DrawableArea;
   x?: number | Number;
   y?: number;
   width?: number;

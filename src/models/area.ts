@@ -1,4 +1,4 @@
-import { AreaEvents, BaseAreaEvent } from '../types/area-types';
+import { AreaEvents, BaseAreaEvent,  } from '../types/area-types';
 import commons from '../types/commons';
 import { AreaState } from './area-state.js';
 import Space from './space';
@@ -6,6 +6,7 @@ import { CreateMode } from './space';
 import createResizableStyles, { ResizableCustomStyle } from '../styles/resizable-area-style';
 import transitions from '../styles/transitions';
 import { style } from 'typestyle';
+import { createEventHandler, EventsHandler } from './events-handler';
 
 /**
  * Area class represents a resizable and draggable area within a container
@@ -15,8 +16,8 @@ export default class Area {
   private _areaOptions: HTMLDivElement = document.createElement('div');
   private _deleteButton: HTMLButtonElement = document.createElement('button');
   private _confirmButton: HTMLButtonElement = document.createElement('button');
-  private _eventListeners: Map<AreaEvents | string, Set<(event: BaseAreaEvent) => void>> = new Map();
   private _customStyle: any;
+  private _eventHandler : EventsHandler
   // @ts-ignore
   protected _id: string;
   protected _space: Space;
@@ -36,7 +37,7 @@ export default class Area {
    */
   constructor(space: Space, style?: ResizableCustomStyle) {
     this._space = space;
-
+    this._eventHandler = createEventHandler()
     if (style) this._customStyle = createResizableStyles(style);
     else this._customStyle = createResizableStyles(this._space.getResizableCustomStyle());
     this._container = space.getContainer();
@@ -78,18 +79,14 @@ export default class Area {
    * Add event listeners
    */
   on(eventName: AreaEvents | string, callback: (e: BaseAreaEvent) => void) {
-    if (!this._eventListeners.has(eventName)) this._eventListeners.set(eventName, new Set());
-    const set = this._eventListeners.get(eventName);
-    set.add(callback);
-    console.log(this._eventListeners);
+    this._eventHandler.on(eventName,callback)
   }
 
   /**
    * Remove event listener
    */
   off(eventName: string, callback: (e: BaseAreaEvent) => void) {
-    const set = this._eventListeners.get(eventName);
-    if (set.delete(callback)) console.log('evento elminato');
+    this._eventHandler.off(eventName,callback)
   }
 
   detectElementsUnderArea(precision?: number | 'default', selector?: string) {
@@ -181,9 +178,9 @@ export default class Area {
     this._createNewResizableDiv();
   }
 
-  _executeListeners(eventname: AreaEvents, x?: Number, y?: number, width?: number, height?: number, side?: string) {
-    const event = this._createEvent(eventname, x, y, width, height, side);
-    const listeners = this._eventListeners.get(event.type);
+  _executeListeners(eventname: AreaEvents) {
+    const event = this._createEvent(eventname);
+    const listeners = this._eventHandler.getlisteners().get(event.type);
     if (listeners) {
       listeners.forEach(callback => callback(event));
     }
@@ -210,15 +207,15 @@ export default class Area {
   }
 
   // prettier-ignore
-  _createEvent(eventName: AreaEvents, x?: Number, y?: number, width?: number, height?: number, side?: string): BaseAreaEvent {
+  _createEvent(eventName: AreaEvents): BaseAreaEvent {
     const event: BaseAreaEvent = {
       type: eventName,
       target: this,
-      x: x || this._state.offsetX || null,
-      y: y || this._state.offsetY || null,
-      width: width || this._state.startWidth || null,
-      height: height || this._state.startHeight || null,
-      side: side || this._getPositionString(this._state.position)
+      x: +this._resizable.style.left,
+      y: +this._resizable.style.top,
+      width: +this._resizable.style.width,
+      height: +this._resizable.style.height,
+      side: this._getPositionString(this._state.position)
     }
     return event;
   }
@@ -234,7 +231,6 @@ export default class Area {
     const deleteButtonStyle = this._customStyle.elements.deleteButton;
     const confirmButtonStyle = this._customStyle.elements.confirmButton;
 
-    console.log('style prima ', this._customStyle.elements);
 
     this._resizable.classList.add(resizableStyles.class);
     this._areaOptions.classList.add(areaOptionsStyle.class);
@@ -366,7 +362,7 @@ export default class Area {
     // Determina dove è stato il click rispetto ai bordi
     this._state.updatePosition(x, y, rect.width, rect.height, commons.RESIZE_OFFSET);
 
-    if (this._state.position.bottom || this._state.position.top || this._state.position.left || this._state.position.right) {
+    if (this._state.position.isBottomEdge || this._state.position.isTopEdge || this._state.position.isLeftEdge || this._state.position.isRightEdge) {
       // Salva i valori iniziali
       this._state.isResizing = true;
       this._state.enableMovement = false; // Corretto dal JS originale

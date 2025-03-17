@@ -5,6 +5,8 @@
 export class AreaState {
   private _prunable: boolean = false;
   private _isThisAreaSelected: boolean = false;
+  private _isConfirmed = false
+  private _isDeleted = false
   private _enableMovement: boolean = false;
   private _isResizing: boolean = false;
   private _offsetX: number = 0;
@@ -15,16 +17,22 @@ export class AreaState {
   private _startHeight: number = 0;
   private _startLeft: number = 0;
   private _startTop: number = 0;
+  private _left: number;
+  private _top: number;
+  private _width: number;
+  private _height: number;
+  private _side: string;
+
   private _position: {
-    left: boolean;
-    right: boolean;
-    top: boolean;
-    bottom: boolean;
+    isLeftEdge: boolean;
+    isRightEdge: boolean;
+    isTopEdge: boolean;
+    isBottomEdge: boolean;
   } = {
-    left: false,
-    right: false,
-    top: false,
-    bottom: false,
+    isLeftEdge: false,
+    isRightEdge: false,
+    isTopEdge: false,
+    isBottomEdge: false,
   };
 
   // Getters
@@ -76,7 +84,27 @@ export class AreaState {
     return this._startTop;
   }
 
-  get position(): { left: boolean; right: boolean; top: boolean; bottom: boolean } {
+  get left(): number {
+    return this._left;
+  }
+
+  get top(): number {
+    return this._top;
+  }
+
+  get width(): number {
+    return this._width;
+  }
+
+  get height(): number {
+    return this._height;
+  }
+
+  get side(): string {
+    return this._side;
+  }
+
+  get position(): { isLeftEdge: boolean; isRightEdge: boolean; isTopEdge: boolean; isBottomEdge: boolean } {
     return this._position;
   }
 
@@ -129,14 +157,50 @@ export class AreaState {
     this._startTop = value;
   }
 
+  set left(value: number) {
+    this._left = value;
+  }
+
+  set top(value: number) {
+    this._top = value;
+  }
+
+  set width(value: number) {
+    this._width = value;
+  }
+
+  set height(value: number) {
+    this._height = value;
+  }
+
+  set side(value: string) {
+    this._side = value;
+  }
+
+  set isDeleted(val:boolean){
+    this._isDeleted = val
+  }
+
+  get isDeleted(){
+    return this._isDeleted
+  }
+
+  set isConfirmed(val : boolean){
+    this._isConfirmed  = val
+  }
+  
+  get isConfirmed (){
+    return this._isConfirmed;
+  }
+
   /**
    * Resets all the position properties in state object
    */
   resetPosition(): void {
-    this._position.left = false;
-    this._position.right = false;
-    this._position.top = false;
-    this._position.bottom = false;
+    this._position.isLeftEdge = false;
+    this._position.isRightEdge = false;
+    this._position.isTopEdge = false;
+    this._position.isBottomEdge = false;
   }
 
   /**
@@ -149,12 +213,12 @@ export class AreaState {
    */
   updatePosition(x: number, y: number, width: number, height: number, resizeOffset: number): void {
     this.resetPosition();
-    
-    if (x < resizeOffset) this._position.left = true;
-    else if (x > width - resizeOffset) this._position.right = true;
 
-    if (y < resizeOffset) this._position.top = true;
-    else if (y > height - resizeOffset) this._position.bottom = true;
+    if (x < resizeOffset) this._position.isLeftEdge = true;
+    else if (x > width - resizeOffset) this._position.isRightEdge = true;
+
+    if (y < resizeOffset) this._position.isTopEdge = true;
+    else if (y > height - resizeOffset) this._position.isBottomEdge = true;
   }
 
   /**
