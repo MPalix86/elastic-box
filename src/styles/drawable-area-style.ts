@@ -13,6 +13,7 @@ interface DrawableStyle {
   borderRadius?: string;
   opacity?: string;
   zIndex?: string;
+  borderColor: string;
 }
 
 // Definizione delle animazioni
@@ -25,7 +26,8 @@ export default function createDrawableStyles(customTheme: DrawableCustomStyle = 
   // Stile di base per l'area disegnabile
   const drawableStyle = {
     position: 'absolute', // Questo è fisso, non personalizzabile
-    border: customTheme.drawable?.border || '2px dashed #3498db',
+    border: customTheme.drawable?.border ||  '2px dashed ',
+    borderColor: customTheme.drawable.borderColor || `#3498db` ,
     backgroundColor: customTheme.drawable?.backgroundColor || 'rgba(52, 152, 219, 0.2)',
     borderRadius: customTheme.drawable?.borderRadius || '0px',
     opacity: customTheme.drawable?.opacity || '0.6',

@@ -42,6 +42,12 @@ class ElasticBoxDemo {
   private drawableOptions: DrawableSetupOptions = {
     turnInResizableArea: true,
     persist: false,
+    customStyle:{
+      drawable :{
+        backgroundColor : 'red'
+        
+      }
+    }
   };
 
   /**
