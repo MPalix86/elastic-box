@@ -13,7 +13,7 @@ interface DrawableStyle {
   borderRadius?: string;
   opacity?: string;
   zIndex?: string;
-  borderColor: string;
+  borderColor?: string;
 }
 
 // Definizione delle animazioni
