@@ -4,13 +4,13 @@ import DrawableAreaState from './drawable-area-state';
 import Space, { CreateMode } from './space';
 import createDrawableStyles from '../styles/drawable-area-style';
 import { createEventHandler, EventsHandler } from './events-handler';
+import { DrawableCustomStyle } from '@__pali__/elastic-box';
 
 export default class DrawableArea {
   private _drawable: HTMLDivElement = document.createElement('div');
   private _setupOtions: DrawableSetupOptions = {
     persist: false,
     turnInResizableArea: false,
-    customStyle: {},
   };
   private _space: Space;
   private _state: DrawableAreaState = new DrawableAreaState();
@@ -19,8 +19,9 @@ export default class DrawableArea {
   private _customStyle: any;
   private _eventsHandler: EventsHandler;
 
-  constructor(space: Space, options?: DrawableSetupOptions) {
-    this._customStyle = createDrawableStyles(options.customStyle);
+  constructor(space: Space, options?: DrawableSetupOptions, customStyle ?: DrawableCustomStyle) {
+    const style = customStyle ? customStyle: this._space.getDefaultDrawableCustomStyle()
+    this._customStyle = createDrawableStyles(customStyle);
     this._space = space;
     this._eventsHandler = createEventHandler()
     this._container = space.getContainer();
@@ -36,6 +37,12 @@ export default class DrawableArea {
 
   off(event: DrawableAreaEvents | string, callback: (e: BaseAreaEvent) => void) {
     this._eventsHandler.off(event, callback);
+  }
+
+  remove(){
+    this._container.removeChild(this._drawable)
+    this._state.prunable =true;
+    this._space.prune();
   }
 
   getSetupOptions() {

@@ -36,6 +36,5 @@ export interface BaseAreaEvent {
 export interface DrawableSetupOptions{
   persist ?: boolean,
   turnInResizableArea ?: boolean,
-  customStyle ?: DrawableCustomStyle
   
 }

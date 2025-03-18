@@ -13,7 +13,6 @@ interface DrawableStyle {
   borderRadius?: string;
   opacity?: string;
   zIndex?: string;
-  borderColor?: string;
 }
 
 // Definizione delle animazioni
@@ -27,12 +26,10 @@ export default function createDrawableStyles(customTheme: DrawableCustomStyle = 
   const drawableStyle = {
     position: 'absolute', // Questo è fisso, non personalizzabile
     border: customTheme.drawable?.border ||  '2px dashed ',
-    borderColor: customTheme.drawable.borderColor || `#3498db` ,
     backgroundColor: customTheme.drawable?.backgroundColor || 'rgba(52, 152, 219, 0.2)',
     borderRadius: customTheme.drawable?.borderRadius || '0px',
     opacity: customTheme.drawable?.opacity || '0.6',
     zIndex: customTheme.drawable?.zIndex || '100',
-    cursor: 'crosshair',
     transition: 'opacity 0.2s ease',
     animationName: creationAnimation,
     animationDuration: '0.3s',

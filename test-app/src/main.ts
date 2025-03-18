@@ -1,7 +1,5 @@
-import { Space, Area, DrawableArea, ResizableCustomStyle, DrawableSetupOptions } from '@__pali__/elastic-box';
+import { Space, Area, DrawableArea, ResizableCustomStyle, DrawableSetupOptions, DrawableCustomStyle } from '@__pali__/elastic-box';
 import { BaseAreaEvent } from '@__pali__/elastic-box/dist/types/area-types';
-
-
 
 /**
  * ElasticBoxDemo - A demonstration of the elastic-box library
@@ -27,7 +25,7 @@ class ElasticBoxDemo {
   private isDrawing: boolean = false;
 
   // Custom styling for resizable areas
-  private customStyle: ResizableCustomStyle = {
+  private resizableCustomStyle: ResizableCustomStyle = {
     resizable: {
       backgroundColor: 'rgba(105, 110, 255, 0.5)',
       border: '2px solid white',
@@ -36,19 +34,22 @@ class ElasticBoxDemo {
       minHeight: '100px',
       minWidth: '100px',
     },
+    areaOptions: {
+      position: 'horizontal',
+    },
   };
 
   // Configuration for drawable areas
   private drawableOptions: DrawableSetupOptions = {
     turnInResizableArea: true,
     persist: false,
-    customStyle:{
-      drawable :{
-        backgroundColor : 'red'
-        
-      }
-    }
   };
+
+  private drawableCustomStyle : DrawableCustomStyle ={
+    drawable:{
+      backgroundColor: 'black'
+    }
+  }
 
   /**
    * Constructor - Initialize the demo
@@ -106,7 +107,10 @@ class ElasticBoxDemo {
    * Initialize the elastic-box Space with custom styling
    */
   private initializeSpace(): void {
-    this.space = new Space(this.container, this.customStyle);
+    this.space = new Space(this.container);
+
+    this.space.setDefaultDrawablebleStyle(this.drawableCustomStyle)
+    this.space.setDefaultResizableStyle(this.resizableCustomStyle)
     console.log('Elastic Box space initialized');
   }
 
@@ -156,29 +160,25 @@ class ElasticBoxDemo {
     this.createDrawableBtn.textContent = 'Drawing in progress...';
     this.createDrawableBtn.classList.add('active');
 
-
     const drawableArea = this.space.createDrawableArea(this.drawableOptions);
     this.drawableAreas.push(drawableArea);
-    drawableArea.on('draw-start', ()=>{
-      console.log(`draw-start`)
-    })
-    drawableArea.on('draw-end', ()=>{
-      console.log(`draw-end`)
-    })
-    drawableArea.on('drawing', ()=>{
-      console.log(`drawing`)
-    })
+    drawableArea.on('draw-start', () => {
+      console.log(`draw-start`);
+    });
+    drawableArea.on('draw-end', () => {
+      console.log(`draw-end`);
+    });
+    drawableArea.on('drawing', () => {
+      console.log(`drawing`);
+    });
 
-
-
-    drawableArea.on('turned-in-resizable', () =>{
+    drawableArea.on('turned-in-resizable', () => {
       const area = drawableArea.getResizable();
-      console.log(`turned in resizable`)
-      area.on('confirmed',() =>{
-        console.log(`drawed area turned in resizable confirmed`)
-      })
-    })   
-
+      console.log(`turned in resizable`);
+      area.on('confirmed', () => {
+        console.log(`drawed area turned in resizable confirmed`);
+      });
+    });
   }
 
   /**
@@ -395,7 +395,9 @@ class ElasticBoxDemo {
     // Movement events
     area.on('move', this.handleMove);
 
-    area.on('confirmed', () =>{console.log()})
+    area.on('confirmed', () => {
+      console.log();
+    });
   }
 
   /**
@@ -419,8 +421,6 @@ class ElasticBoxDemo {
     // Movement events
     area.off('move', this.handleMove);
   }
-
-
 
   /**
    * Add a log entry to the status panel
@@ -470,11 +470,11 @@ class ElasticBoxDemo {
   }
 
   private handleTurnInResizable(e: BaseAreaEvent) {
-    const area = e.target.getResizable()
+    const area = e.target.getResizable();
     // @ts-ignore
-    area.on(`confirmed`,(e)=>{
-      console.log(`area created by drawing was confirmed`)      
-    })
+    area.on(`confirmed`, e => {
+      console.log(`area created by drawing was confirmed`);
+    });
   }
 
   // Event handlers

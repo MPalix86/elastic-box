@@ -2,7 +2,7 @@ import Area from './area';
 import Commons from '../types/commons';
 import { ResizableCustomStyle } from '../styles/resizable-area-style';
 import DrawableArea from './drawable-area';
-import { DrawableSetupOptions } from '@__pali__/elastic-box';
+import { DrawableCustomStyle, DrawableSetupOptions } from '@__pali__/elastic-box';
 import { AreaEvents, DrawableAreaEvents } from '../types/area-types';
 
 export enum CreateMode {
@@ -34,14 +34,15 @@ export default class Space {
 
   private _createMode: CreateMode;
 
+  private _drawableCustomStyle : DrawableCustomStyle
+
   /**
    * Creates a new Space with the given container
    * @param container HTML element that will contain the areas
    */
-  constructor(container: HTMLElement, resizableCustomStyle: ResizableCustomStyle = {}) {
+  constructor(container: HTMLElement) {
     this._container = container;
     this._createSpace();
-    this._resizableCustomSyle = resizableCustomStyle;
   }
 
   /**
@@ -57,17 +58,15 @@ export default class Space {
    * @returns The newly created area
    */
   public createResizableArea(customStyle?: ResizableCustomStyle): Area {
-    let style: ResizableCustomStyle;
     this._totalAreaCreatedInSpace++;
-    if (customStyle) style = customStyle;
-    const area = new Area(this, style);
+    const area = new Area(this, customStyle);
     this._areas.push(area);
     return area;
   }
 
   public createDrawableArea(options: DrawableSetupOptions): DrawableArea {
     this._totalAreaCreatedInSpace++;
-    const drawableArea = new DrawableArea(this, options);
+    const drawableArea = new DrawableArea(this, options, this._drawableCustomStyle);
     this._drawableAreas.push(drawableArea);
     return drawableArea;
   }
@@ -99,6 +98,17 @@ export default class Space {
    */
   public setDefaultResizableStyle(customStyle: ResizableCustomStyle) {
     this._resizableCustomSyle = customStyle;
+  }
+
+public getDefaultDrawableCustomStyle(){
+  return this._drawableCustomStyle
+}
+
+  /**
+   * set custom style
+   */
+  public setDefaultDrawablebleStyle(customStyle: DrawableCustomStyle) {
+    this._drawableCustomStyle = customStyle;
   }
 
   /**
@@ -261,8 +271,8 @@ export default class Space {
     const scrollTop = this._container.scrollTop || 0;
 
     // Calcola le coordinate relative al container con l'offset e compensazione scroll
-    const relativeX = e.clientX - containerRect.left - state.dinstanceFromPointer + scrollLeft;
-    const relativeY = e.clientY - containerRect.top - state.dinstanceFromPointer + scrollTop;
+    const relativeX = e.clientX - containerRect.left 
+    const relativeY = e.clientY - containerRect.top  
 
     // Salva i valori iniziali
     state.startX = relativeX;
@@ -335,62 +345,85 @@ export default class Space {
   private _drawAreamouseUp(e: MouseEvent) {
     const drawable = this._findActivedDrawableArea();
     if (!drawable) return;
-    
+        
     const state = drawable.getState();
     if (!state.isMouseDown) return; // Non fare nulla se non era in disegno
-
+    
     state.isMouseDown = false;
     drawable.endDrawing();
-
+    
     // Ottieni la posizione e dimensione correnti dallo stile
     const style = drawable.getStyle();
-    const left = parseInt(style.left, 10) || state.startX;
-    const top = parseInt(style.top, 10) || state.startY;
-    const width = parseInt(style.width, 10) || 0;
-    const height = parseInt(style.height, 10) || 0;
-
-    state.left = left
-    state.top = top
-    state.height = height
-    state.width = width
-
-
+    // Rimuovi 'px' e converti in numeri
+    const left = parseInt(style.left);
+    const top = parseInt(style.top);
+    const width = parseInt(style.width);
+    const height = parseInt(style.height);
+    
+    state.left = left;
+    state.top = top;
+    state.height = height;
+    state.width = width;
+     
     // Ignora se troppo piccolo
     if (width < 5 || height < 5) {
       const options = drawable.getSetupOptions();
       if (!options.persist) this._container.removeChild(drawable.getDrawable());
       return;
     }
-
- 
-
-
+        
     const options = drawable.getSetupOptions();
-
+    
     if (options.turnInResizableArea) {
+      // Utilizziamo direttamente la posizione del drawable
+      // senza alcuna trasformazione di coordinate
       const resizableStyle = structuredClone(this._resizableCustomSyle);
       resizableStyle.resizable = resizableStyle.resizable || {};
       resizableStyle.resizable.width = `${width}px`;
       resizableStyle.resizable.height = `${height}px`;
       resizableStyle.resizable.left = `${left}px`;
       resizableStyle.resizable.top = `${top}px`;
+      
+      // Salva la posizione originale del drawable per debug
+      console.log("Drawable position:", {left, top, width, height});
+      
+      // Crea un'area resizable con le stesse coordinate esatte
       const area = this.createResizableArea(resizableStyle);
+      
+      // Forza le stesse coordinate anche dopo la creazione per sicurezza
+      const resizableElement = area.getResizable();
+      if (resizableElement) {
+        resizableElement.style.position = "absolute";
+        resizableElement.style.left = `${left}px`;
+        resizableElement.style.top = `${top}px`;
+        resizableElement.style.width = `${width}px`;
+        resizableElement.style.height = `${height}px`;
+        
+        // Log per debug
+        console.log("Resizable position set to:", {
+          left: resizableElement.style.left,
+          top: resizableElement.style.top,
+          width: resizableElement.style.width,
+          height: resizableElement.style.height
+        });
+      }
+      
       drawable.setResizable(area);
-      state.isTurnedInResizable = true
-      this._container.removeChild(drawable.getDrawable())
-      drawable._executeListeners(DrawableAreaEvents.TurnedInResizable)
+      state.isTurnedInResizable = true;
+      
+      // Rimuovi il drawable solo dopo aver confermato che il resizable è correttamente posizionato
+      this._container.removeChild(drawable.getDrawable());
+      drawable._executeListeners(DrawableAreaEvents.TurnedInResizable);
     }
-
-    else if (options.persist){
-      drawable._executeListeners(DrawableAreaEvents.Persisted)
-      state.isPersisted = true
-    } 
+    else if (options.persist) {
+      drawable._executeListeners(DrawableAreaEvents.Persisted);
+      state.isPersisted = true;
+    }
+    else {
+      this._container.removeChild(drawable.getDrawable());
+    }
     
-    else{
-      this._container.removeChild(drawable.getDrawable())
-    }
-
-    drawable._executeListeners(DrawableAreaEvents.drawEnd)
+    drawable._executeListeners(DrawableAreaEvents.drawEnd);
   }
 }
 

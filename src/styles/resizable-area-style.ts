@@ -23,15 +23,10 @@ interface ResizableStyle {
 }
 
 interface AreaOptionsStyle {
-  top?: string;
-  left?: string;
-  position?: string;
+  position?: 'vertical' | 'horizontal';
   backgroundColor?: string;
   border?: string;
-  height?: string;
-  width?: string;
   cursor?: string;
-  textContent?: string;
 }
 
 interface ButtonStyle {
@@ -66,7 +61,6 @@ const confirmGlowAnimation = keyframes({
 // Stili di base per elementi riutilizzabili
 const baseButtonStyle = {
   position: 'absolute',
-  top: '0px',
   width: '24px',
   height: '24px',
   border: 'none',
@@ -81,8 +75,9 @@ const baseButtonStyle = {
   boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
 };
 
-export default function createResizableStyles(customTheme: ResizableCustomStyle = {}): ResizableCustomStyle{
-  // Create style objects first, then apply the style() function to them
+export default function createResizableStyles(customTheme: ResizableCustomStyle = {}): any {
+  // Imposta il valore predefinito per position se non è definito
+  const optionsPosition = customTheme.areaOptions?.position || 'horizontal';
 
   // Resizable component styles
   const resizableStyle = {
@@ -99,14 +94,14 @@ export default function createResizableStyles(customTheme: ResizableCustomStyle 
   };
 
   // Area options styles
-  const areaOptionsStyle = {
-    top: customTheme.areaOptions?.top || '-30px',
-    left: customTheme.areaOptions?.left || '0',
-    position: customTheme.areaOptions?.position || 'absolute',
+  const horizontalAreaOptionsStyle = {
+    top: '-30px',
+    left: '0',
+    position: 'absolute',
     backgroundColor: customTheme.areaOptions?.backgroundColor || 'transparent',
     border: customTheme.areaOptions?.border || '0px',
-    height: customTheme.areaOptions?.height || '22px',
-    width: customTheme.areaOptions?.width || '100px',
+    height: '22px',
+    width: '100px',
     cursor: customTheme.areaOptions?.cursor || 'default',
     userSelect: 'none',
     display: 'flex',
@@ -114,18 +109,51 @@ export default function createResizableStyles(customTheme: ResizableCustomStyle 
     paddingLeft: '10px',
   };
 
-  // Delete button styles
+  const verticalAreaOptionsStyle = {
+    top: '0',
+    right: '-40px', // Posiziona l'area di opzioni a destra dell'elemento
+    position: 'absolute',
+    backgroundColor: customTheme.areaOptions?.backgroundColor || 'transparent',
+    border: customTheme.areaOptions?.border || '0px',
+    height: '100%', // Altezza al 100% per coprire tutta l'altezza dell'area
+    width: '30px', // Larghezza ridotta per ospitare solo i pulsanti
+    cursor: customTheme.areaOptions?.cursor || 'default',
+    userSelect: 'none',
+    display: 'flex',
+    flexDirection: 'column', // Disposizione verticale degli elementi
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Inizia dall'alto
+    paddingTop: '10px', // Padding superiore invece che a sinistra
+  };
+
+  // Seleziona lo stile dell'area opzioni in base alla posizione
+  const areaOptionsStyle = optionsPosition === 'vertical' 
+    ? verticalAreaOptionsStyle 
+    : horizontalAreaOptionsStyle;
+
+  // Stili dei pulsanti in base all'orientamento
+  // Per layout orizzontale, i pulsanti sono uno accanto all'altro
+  // Per layout verticale, i pulsanti sono uno sotto l'altro
   const deleteButtonStyle = {
     ...baseButtonStyle,
-    left: customTheme.deleteButton?.left || '2px',
-    top: customTheme.deleteButton?.top || '0px',
-    width: customTheme.deleteButton?.width || '24px',
-    height: customTheme.deleteButton?.height || '24px',
     backgroundColor: customTheme.deleteButton?.backgroundColor || '#ff3333',
     color: customTheme.deleteButton?.color || 'white',
     border: customTheme.deleteButton?.border || 'none',
     borderRadius: customTheme.deleteButton?.borderRadius || '4px',
     fontSize: customTheme.deleteButton?.fontSize || '14px',
+    width: customTheme.deleteButton?.width || '24px',
+    height: customTheme.deleteButton?.height || '24px',
+    // Posizionamento condizionale in base all'orientamento
+    ...(optionsPosition === 'vertical' 
+      ? { 
+          left: customTheme.deleteButton?.left || '3px',
+          top: customTheme.deleteButton?.top || '5px'
+        }
+      : { 
+          left: customTheme.deleteButton?.left || '2px',
+          top: customTheme.deleteButton?.top || '0px'
+        }
+    ),
     $nest: {
       '&:hover': {
         backgroundColor: '#ff5555',
@@ -146,15 +174,24 @@ export default function createResizableStyles(customTheme: ResizableCustomStyle 
   // Confirm button styles
   const confirmButtonStyle = {
     ...baseButtonStyle,
-    left: customTheme.confirmButton?.left || '30px',
-    top: customTheme.confirmButton?.top || '0px',
-    width: customTheme.confirmButton?.width || '24px',
-    height: customTheme.confirmButton?.height || '24px',
     backgroundColor: customTheme.confirmButton?.backgroundColor || '#2ecc71',
     color: customTheme.confirmButton?.color || 'white',
     border: customTheme.confirmButton?.border || 'none',
     borderRadius: customTheme.confirmButton?.borderRadius || '4px',
     fontSize: customTheme.confirmButton?.fontSize || '14px',
+    width: customTheme.confirmButton?.width || '24px',
+    height: customTheme.confirmButton?.height || '24px',
+    // Posizionamento condizionale in base all'orientamento
+    ...(optionsPosition === 'vertical' 
+      ? { 
+          left: customTheme.confirmButton?.left || '3px',
+          top: customTheme.confirmButton?.top || '34px'
+        }
+      : { 
+          left: customTheme.confirmButton?.left || '30px',
+          top: customTheme.confirmButton?.top || '0px'
+        }
+    ),
     $nest: {
       '&:hover': {
         backgroundColor: '#3ee686',
@@ -179,7 +216,7 @@ export default function createResizableStyles(customTheme: ResizableCustomStyle 
         style: resizableStyle,
         class: style(resizableStyle),
       },
-
+      
       areaOptions: {
         textContent: customTheme.areaOptions?.textContent || 'Drag',
         style: areaOptionsStyle,

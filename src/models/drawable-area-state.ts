@@ -11,7 +11,6 @@ export default class DrawableAreaState {
 
   private _top: number;
   private _left: number;
-  private _dinstanceFromPointer = 5;
   private _isMouseDown: boolean;
   private _isDrawing: boolean;
   private _prunable = false;
@@ -116,13 +115,6 @@ export default class DrawableAreaState {
     this._left = value;
   }
 
-  get dinstanceFromPointer(): number {
-    return this._dinstanceFromPointer;
-  }
-
-  set dinstanceFromPointer(value: number) {
-    this._dinstanceFromPointer = value;
-  }
 
   get isMouseDown(): boolean {
     return this._isMouseDown;
