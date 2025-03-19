@@ -88,6 +88,8 @@ export default class Area {
   off(eventName: string, callback: (e: BaseAreaEvent) => void) {
     this._eventHandler.off(eventName,callback)
   }
+
+  
   detectElementsUnderArea(precision?: number | 'default' | 'corner', selector?: string) {
     const movableRect = this._resizable.getBoundingClientRect();
     const container = this._container.getBoundingClientRect();

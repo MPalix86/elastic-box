@@ -24,7 +24,6 @@ export class EventsHandler{
    */
   off(eventName: string, callback: (e: BaseAreaEvent) => void) {     
     const set = this._eventListeners.get(eventName);
-    if (set.delete(callback)) console.log('evento elminato');
   }
 
   getlisteners(){
