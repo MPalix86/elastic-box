@@ -35,7 +35,7 @@ class ElasticBoxDemo {
       minWidth: '100px',
     },
     areaOptions: {
-      position: 'horizontal',
+      position: 'vertical',
     },
   };
 

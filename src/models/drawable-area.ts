@@ -21,7 +21,8 @@ export default class DrawableArea {
 
   constructor(space: Space, options?: DrawableSetupOptions, customStyle ?: DrawableCustomStyle) {
     const style = customStyle ? customStyle: this._space.getDefaultDrawableCustomStyle()
-    this._customStyle = createDrawableStyles(customStyle);
+    if(customStyle) this._customStyle = createDrawableStyles(customStyle);
+    else this._customStyle = createDrawableStyles()
     this._space = space;
     this._eventsHandler = createEventHandler()
     this._container = space.getContainer();

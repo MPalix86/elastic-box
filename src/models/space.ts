@@ -34,7 +34,7 @@ export default class Space {
 
   private _createMode: CreateMode;
 
-  private _drawableCustomStyle : DrawableCustomStyle
+  private _drawableCustomStyle: DrawableCustomStyle;
 
   /**
    * Creates a new Space with the given container
@@ -100,9 +100,9 @@ export default class Space {
     this._resizableCustomSyle = customStyle;
   }
 
-public getDefaultDrawableCustomStyle(){
-  return this._drawableCustomStyle
-}
+  public getDefaultDrawableCustomStyle() {
+    return this._drawableCustomStyle;
+  }
 
   /**
    * set custom style
@@ -213,10 +213,10 @@ public getDefaultDrawableCustomStyle(){
         style.top = newTop + 'px';
       }
 
-      state.left = newLeft
-      state.top = newTop
-      state.width = newWidth
-      state.height = newHeight
+      state.left = newLeft;
+      state.top = newTop;
+      state.width = newWidth;
+      state.height = newHeight;
 
       area._executeListeners(AreaEvents.Resize);
     } else if (state.enableMovement) {
@@ -228,7 +228,7 @@ public getDefaultDrawableCustomStyle(){
       style.top = newTop + 'px';
 
       state.left = newLeft;
-      state.top = newTop
+      state.top = newTop;
       state.width = newWidth;
       state.height = newHeight;
       area._executeListeners(AreaEvents.Move);
@@ -271,8 +271,8 @@ public getDefaultDrawableCustomStyle(){
     const scrollTop = this._container.scrollTop || 0;
 
     // Calcola le coordinate relative al container con l'offset e compensazione scroll
-    const relativeX = e.clientX - containerRect.left 
-    const relativeY = e.clientY - containerRect.top  
+    const relativeX = e.clientX - containerRect.left;
+    const relativeY = e.clientY - containerRect.top;
 
     // Salva i valori iniziali
     state.startX = relativeX;
@@ -290,11 +290,10 @@ public getDefaultDrawableCustomStyle(){
 
     state.left = relativeX;
     state.top = relativeY;
-    state.width = 0
-    state.height = 0
+    state.width = 0;
+    state.height = 0;
 
-    drawable._executeListeners(DrawableAreaEvents.drawStart)
-
+    drawable._executeListeners(DrawableAreaEvents.drawStart);
   }
 
   private _drawAreaMouseMove(e: MouseEvent) {
@@ -333,25 +332,21 @@ public getDefaultDrawableCustomStyle(){
     state.height = height;
     style.width = `${width}px`;
     style.height = `${height}px`;
-    state.left = +state.left.valueOf
-    state.top = +state.top.valueOf
-    drawable._executeListeners(DrawableAreaEvents.drawing)
-
-
-    
+    state.left = +state.left.valueOf;
+    state.top = +state.top.valueOf;
+    drawable._executeListeners(DrawableAreaEvents.drawing);
   }
-
 
   private _drawAreamouseUp(e: MouseEvent) {
     const drawable = this._findActivedDrawableArea();
     if (!drawable) return;
-        
+
     const state = drawable.getState();
     if (!state.isMouseDown) return; // Non fare nulla se non era in disegno
-    
+
     state.isMouseDown = false;
     drawable.endDrawing();
-    
+
     // Ottieni la posizione e dimensione correnti dallo stile
     const style = drawable.getStyle();
     // Rimuovi 'px' e converti in numeri
@@ -359,21 +354,21 @@ public getDefaultDrawableCustomStyle(){
     const top = parseInt(style.top);
     const width = parseInt(style.width);
     const height = parseInt(style.height);
-    
+
     state.left = left;
     state.top = top;
     state.height = height;
     state.width = width;
-     
+
     // Ignora se troppo piccolo
     if (width < 5 || height < 5) {
       const options = drawable.getSetupOptions();
       if (!options.persist) this._container.removeChild(drawable.getDrawable());
       return;
     }
-        
+
     const options = drawable.getSetupOptions();
-    
+
     if (options.turnInResizableArea) {
       // Utilizziamo direttamente la posizione del drawable
       // senza alcuna trasformazione di coordinate
@@ -383,49 +378,44 @@ public getDefaultDrawableCustomStyle(){
       resizableStyle.resizable.height = `${height}px`;
       resizableStyle.resizable.left = `${left}px`;
       resizableStyle.resizable.top = `${top}px`;
-      
+
       // Salva la posizione originale del drawable per debug
-      console.log("Drawable position:", {left, top, width, height});
-      
+      console.log('Drawable position:', { left, top, width, height });
+
       // Crea un'area resizable con le stesse coordinate esatte
       const area = this.createResizableArea(resizableStyle);
-      
+
       // Forza le stesse coordinate anche dopo la creazione per sicurezza
       const resizableElement = area.getResizable();
       if (resizableElement) {
-        resizableElement.style.position = "absolute";
+        resizableElement.style.position = 'absolute';
         resizableElement.style.left = `${left}px`;
         resizableElement.style.top = `${top}px`;
         resizableElement.style.width = `${width}px`;
         resizableElement.style.height = `${height}px`;
-        
+
         // Log per debug
-        console.log("Resizable position set to:", {
+        console.log('Resizable position set to:', {
           left: resizableElement.style.left,
           top: resizableElement.style.top,
           width: resizableElement.style.width,
-          height: resizableElement.style.height
+          height: resizableElement.style.height,
         });
       }
-      
+
       drawable.setResizable(area);
       state.isTurnedInResizable = true;
-      
+
       // Rimuovi il drawable solo dopo aver confermato che il resizable è correttamente posizionato
       this._container.removeChild(drawable.getDrawable());
       drawable._executeListeners(DrawableAreaEvents.TurnedInResizable);
-    }
-    else if (options.persist) {
+    } else if (options.persist) {
       drawable._executeListeners(DrawableAreaEvents.Persisted);
       state.isPersisted = true;
-    }
-    else {
+    } else {
       this._container.removeChild(drawable.getDrawable());
     }
-    
+
     drawable._executeListeners(DrawableAreaEvents.drawEnd);
   }
 }
-
-
-
