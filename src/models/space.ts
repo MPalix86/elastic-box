@@ -270,9 +270,18 @@ export default class Space {
     const scrollLeft = this._container.scrollLeft || 0;
     const scrollTop = this._container.scrollTop || 0;
 
+    console.log('elastic scrolltop',scrollTop)
+    console.log('elastic left',scrollLeft)
+
     // Calcola le coordinate relative al container con l'offset e compensazione scroll
-    const relativeX = e.clientX - containerRect.left;
-    const relativeY = e.clientY - containerRect.top;
+    const relativeX = e.clientX - containerRect.left + scrollLeft;
+    const relativeY = e.clientY - containerRect.top + scrollTop
+
+    console.log('e.clientX',e.clientX)
+    console.log('e.clientY',e.clientY)
+
+    console.log('relativeX',relativeX)
+    console.log('relativeY' , relativeY);
 
     // Salva i valori iniziali
     state.startX = relativeX;

@@ -88,8 +88,7 @@ export default class Area {
   off(eventName: string, callback: (e: BaseAreaEvent) => void) {
     this._eventHandler.off(eventName,callback)
   }
-
-  detectElementsUnderArea(precision?: number | 'default', selector?: string) {
+  detectElementsUnderArea(precision?: number | 'default' | 'corner', selector?: string) {
     const movableRect = this._resizable.getBoundingClientRect();
     const container = this._container.getBoundingClientRect();
 
@@ -99,6 +98,8 @@ export default class Area {
     // Set precision with proper defaults
     if (precision === undefined || precision === 'default') {
       precision = 0.25;
+    } else if (precision === 'corner') {
+      precision = -1;
     } else {
       precision = 1 / Math.abs(precision);
     }
@@ -111,28 +112,30 @@ export default class Area {
       { x: movableRect.left, y: movableRect.bottom }, // Bottom-left corner
     ];
 
-    // Calculate the step size based on precision and dimensions
-    const stepX = width * precision;
-    const stepY = height * precision;
+    if (typeof precision === 'number' && precision > 0) {
+      // Calculate the step size based on precision and dimensions
+      const stepX = width * precision;
+      const stepY = height * precision;
 
-    // Limit the maximum number of points to prevent browser freezing
-    const maxPointsPerDimension = 20;
-    const actualStepX = Math.max(stepX, width / maxPointsPerDimension);
-    const actualStepY = Math.max(stepY, height / maxPointsPerDimension);
+      // Limit the maximum number of points to prevent browser freezing
+      const maxPointsPerDimension = 20;
+      const actualStepX = Math.max(stepX, width / maxPointsPerDimension);
+      const actualStepY = Math.max(stepY, height / maxPointsPerDimension);
 
-    // Add more points for greater accuracy, but with a reasonable limit
-    for (let i = 0; i <= width; i += actualStepX) {
-      for (let j = 0; j <= height; j += actualStepY) {
-        // Skip the very first point (0,0) as it's already in the corners array
-        if (i === 0 && j === 0) continue;
+      // Add more points for greater accuracy, but with a reasonable limit
+      for (let i = 0; i <= width; i += actualStepX) {
+        for (let j = 0; j <= height; j += actualStepY) {
+          // Skip the very first point (0,0) as it's already in the corners array
+          if (i === 0 && j === 0) continue;
 
-        const x = movableRect.left + i;
-        const y = movableRect.top + j;
+          const x = movableRect.left + i;
+          const y = movableRect.top + j;
 
-        const relativeX = x - container.left;
-        const relativeY = y - container.top;
+          const relativeX = x - container.left;
+          const relativeY = y - container.top;
 
-        testPoints.push({ x: relativeX, y: relativeY });
+          testPoints.push({ x: relativeX, y: relativeY });
+        }
       }
     }
 

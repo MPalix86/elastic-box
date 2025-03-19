@@ -12,4 +12,4 @@ import { DrawableAreaEvents } from './types/area-types';
 import { AreaEvents } from './types/area-types';
 
 // Esportazione corretta per evitare l'oggetto default annidato
-export { Space, Area , ResizableCustomStyle, DrawableSetupOptions, DrawableCustomStyle, DrawableArea, DrawableAreaEvents,AreaEvents};
+export { Space, Area , ResizableCustomStyle, DrawableSetupOptions, DrawableCustomStyle, DrawableArea, DrawableAreaEvents, AreaEvents};

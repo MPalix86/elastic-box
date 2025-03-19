@@ -20,7 +20,6 @@ export default class DrawableArea {
   private _eventsHandler: EventsHandler;
 
   constructor(space: Space, options?: DrawableSetupOptions, customStyle ?: DrawableCustomStyle) {
-    const style = customStyle ? customStyle: this._space.getDefaultDrawableCustomStyle()
     if(customStyle) this._customStyle = createDrawableStyles(customStyle);
     else this._customStyle = createDrawableStyles()
     this._space = space;
@@ -97,7 +96,7 @@ export default class DrawableArea {
 
   // prettier-ignore
   _createEvent(eventName: DrawableAreaEvents): BaseAreaEvent {
-        const event: BaseAreaEvent = {
+        const event: BaseAreaEvent = { 
           type: eventName,
           target: this,
           x: +this._drawable.style.left.valueOf,
