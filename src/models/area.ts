@@ -1,4 +1,4 @@
-import { AreaEvents, BaseAreaEvent,  } from '../types/area-types';
+import { AreaEvents, BaseAreaEvent, ResizabelSetupOptions } from '../types/area-types';
 import commons from '../types/commons';
 import { AreaState } from './area-state.js';
 import Space from './space';
@@ -13,15 +13,20 @@ import { createEventHandler, EventsHandler } from './events-handler';
  */
 export default class Area {
   private _resizable: HTMLDivElement = document.createElement('div');
-  private _areaOptions: HTMLDivElement = document.createElement('div');
+  private _buttonsPanel: HTMLDivElement = document.createElement('div');
   private _deleteButton: HTMLButtonElement = document.createElement('button');
   private _confirmButton: HTMLButtonElement = document.createElement('button');
   private _customStyle: any;
-  private _eventHandler : EventsHandler
+  private _eventHandler: EventsHandler;
   // @ts-ignore
   protected _id: string;
   protected _space: Space;
   protected _state: AreaState = new AreaState();
+
+  private _resizableSetupOptions: ResizabelSetupOptions = {
+    deleteOnLeave: false,
+    showAreaOptions: true,
+  };
 
   protected _container: HTMLElement;
 
@@ -37,7 +42,7 @@ export default class Area {
    */
   constructor(space: Space, style?: ResizableCustomStyle) {
     this._space = space;
-    this._eventHandler = createEventHandler()
+    this._eventHandler = createEventHandler();
     if (style) this._customStyle = createResizableStyles(style);
     else this._customStyle = createResizableStyles(this._space.getResizableCustomStyle());
     this._container = space.getContainer();
@@ -61,6 +66,10 @@ export default class Area {
     return this._resizable.style;
   }
 
+  getSetupOptions() : ResizabelSetupOptions{
+    return this._resizableSetupOptions;
+  }
+
   /**
    * Deselects this area, canceling any active movement or resize operation
    */
@@ -79,17 +88,16 @@ export default class Area {
    * Add event listeners
    */
   on(eventName: AreaEvents | string, callback: (e: BaseAreaEvent) => void) {
-    this._eventHandler.on(eventName,callback)
+    this._eventHandler.on(eventName, callback);
   }
 
   /**
    * Remove event listener
    */
   off(eventName: string, callback: (e: BaseAreaEvent) => void) {
-    this._eventHandler.off(eventName,callback)
+    this._eventHandler.off(eventName, callback);
   }
 
-  
   detectElementsUnderArea(precision?: number | 'default' | 'corner', selector?: string) {
     const movableRect = this._resizable.getBoundingClientRect();
     const container = this._container.getBoundingClientRect();
@@ -229,27 +237,6 @@ export default class Area {
    * Creates the resizable div with handle and delete button
    */
   private _createNewResizableDiv(): void {
-    this._resizable.classList.add('resizable');
-
-    const resizableStyles = this._customStyle.elements.resizable;
-    const areaOptionsStyle = this._customStyle.elements.areaOptions;
-    const deleteButtonStyle = this._customStyle.elements.deleteButton;
-    const confirmButtonStyle = this._customStyle.elements.confirmButton;
-
-
-    this._resizable.classList.add(resizableStyles.class);
-    this._areaOptions.classList.add(areaOptionsStyle.class);
-    this._deleteButton.classList.add(deleteButtonStyle.class);
-    this._confirmButton.classList.add(confirmButtonStyle.class);
-
-    this._deleteButton.textContent = deleteButtonStyle.textContent;
-    this._confirmButton.textContent = confirmButtonStyle.textContent;
-
-    this._areaOptions.appendChild(this._deleteButton);
-    this._areaOptions.appendChild(this._confirmButton);
-    this._resizable.appendChild(this._areaOptions);
-    this._container.appendChild(this._resizable);
-
     /**
      * .bind(this) returns a new function with this object bound correctly.
      * Therefore, we need to save the function to unbind it properly in the future.
@@ -260,30 +247,56 @@ export default class Area {
     this._boundDelete = this._delete.bind(this);
     this._boundConfirm = this._confirm.bind(this);
 
+    this._container.appendChild(this._resizable);
+
+    if (this._resizableSetupOptions.showAreaOptions) {
+      const areaOptionsStyle = this._customStyle.elements.areaOptions;
+      const deleteButtonStyle = this._customStyle.elements.deleteButton;
+      const confirmButtonStyle = this._customStyle.elements.confirmButton;
+
+      this._buttonsPanel.classList.add(areaOptionsStyle.class);
+      this._deleteButton.classList.add(deleteButtonStyle.class);
+      this._confirmButton.classList.add(confirmButtonStyle.class);
+      this._deleteButton.textContent = deleteButtonStyle.textContent;
+      this._confirmButton.textContent = confirmButtonStyle.textContent;
+
+      this._buttonsPanel.addEventListener('mousemove', this._preventAreaOptionTrigger);
+      this._buttonsPanel.addEventListener('mousedown', this._preventAreaOptionTrigger);
+      this._buttonsPanel.addEventListener('mouseup', this._preventAreaOptionTrigger);
+
+      this._deleteButton.addEventListener('click', this._boundDelete);
+      this._confirmButton.addEventListener('click', this._boundConfirm);
+
+      this._buttonsPanel.appendChild(this._deleteButton);
+      this._buttonsPanel.appendChild(this._confirmButton);
+      this._resizable.appendChild(this._buttonsPanel);
+    }
+
+
+
+    const resizableStyles = this._customStyle.elements.resizable;
+
+    this._resizable.classList.add(resizableStyles.class);
+
     // Aggiungi gli event listener usando i riferimenti salvati
     this._resizable.addEventListener('mousemove', this._boundMouseMove);
     this._resizable.addEventListener('mousedown', this._boundMouseDown);
     this._resizable.addEventListener('mouseup', this._boundMouseUp);
-
-    this._areaOptions.addEventListener('mousemove', this._preventAreaOptionTrigger);
-    this._areaOptions.addEventListener('mousedown', this._preventAreaOptionTrigger);
-    this._areaOptions.addEventListener('mouseup', this._preventAreaOptionTrigger);
-
-    this._deleteButton.addEventListener('click', this._boundDelete);
-    this._confirmButton.addEventListener('click', this._boundConfirm);
 
     /**
      * we need to store left and top property directly into the elment style
      * because all next calculation are based on this property!
      */
 
-    const containerScrollLeft = this._container.scrollLeft.valueOf()
-    const containerScrollTop = this._container.scrollTop.valueOf()
-    const scrollLeft = +resizableStyles.style.left.split(`px`)[0] + containerScrollLeft
-    const scrollTop = +resizableStyles.style.top.split(`px`)[0] + containerScrollTop
+    const containerScrollLeft = this._container.scrollLeft.valueOf();
+    const containerScrollTop = this._container.scrollTop.valueOf();
+    const scrollLeft = +resizableStyles.style.left.split(`px`)[0] + containerScrollLeft;
+    const scrollTop = +resizableStyles.style.top.split(`px`)[0] + containerScrollTop;
 
-    this._resizable.style.left = scrollLeft +`px`
-    this._resizable.style.top = scrollTop + `px`
+    this._resizable.style.left = scrollLeft + `px`;
+    this._resizable.style.top = scrollTop + `px`;
+
+    this._resizable.classList.add('resizable');
   }
 
   _preventAreaOptionTrigger(e: MouseEvent) {
@@ -300,6 +313,9 @@ export default class Area {
     this._resizable.removeEventListener('mousedown', this._boundMouseDown);
     this._deleteButton.removeEventListener('click', this._boundDelete);
     this._confirmButton.removeEventListener('click', this._boundConfirm);
+    this._buttonsPanel.removeEventListener('mousemove', this._preventAreaOptionTrigger)
+    this._buttonsPanel.removeEventListener('mousedown', this._preventAreaOptionTrigger)
+    this._buttonsPanel.removeEventListener('mouseup', this._preventAreaOptionTrigger)
   }
   /**
    * Handles the deletion of this area
@@ -333,7 +349,7 @@ export default class Area {
       'animationend',
       () => {
         this._unboundlisteners();
-        this._resizable.removeChild(this._areaOptions);
+        this._resizable.removeChild(this._buttonsPanel);
         this._resizable.style.cursor = 'default';
       },
       { once: true }
@@ -347,7 +363,7 @@ export default class Area {
   private _mouseDown(e: MouseEvent): void {
     if (this._state.prunable) return;
     // console.log('mousedonw in area ', this._id);
-    this._state.isThisAreaSelected = true;
+    this._state.isActive = true;
     this._executeListeners(AreaEvents.Select);
 
     // Reset delle posizioni

@@ -4,7 +4,7 @@
  */
 export class AreaState {
   private _prunable: boolean = false;
-  private _isThisAreaSelected: boolean = false;
+  private _isActive: boolean = false;
   private _isConfirmed = false
   private _isDeleted = false
   private _enableMovement: boolean = false;
@@ -40,8 +40,8 @@ export class AreaState {
     return this._prunable;
   }
 
-  get isThisAreaSelected(): boolean {
-    return this._isThisAreaSelected;
+  get isActive(): boolean {
+    return this._isActive;
   }
 
   get enableMovement(): boolean {
@@ -113,8 +113,8 @@ export class AreaState {
     this._prunable = value;
   }
 
-  set isThisAreaSelected(value: boolean) {
-    this._isThisAreaSelected = value;
+  set isActive(value: boolean) {
+    this._isActive = value;
   }
 
   set enableMovement(value: boolean) {
@@ -225,7 +225,7 @@ export class AreaState {
    * Resets all movement and resize states
    */
   reset(): void {
-    this._isThisAreaSelected = false;
+    this._isActive = false;
     this._enableMovement = false;
     this._isResizing = false;
     this.resetPosition();

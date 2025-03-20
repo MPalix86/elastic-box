@@ -12,6 +12,7 @@ export const enum AreaEvents {
   BeforeDelete = 'before-delete',
   AfterDelete = 'after-delete',
   Confirmed = 'confirmed',
+  AreaLeave = 'area-leave'
 }
 
 export const enum DrawableAreaEvents {
@@ -20,6 +21,7 @@ export const enum DrawableAreaEvents {
   drawEnd = 'draw-end',
   TurnedInResizable = 'turned-in-resizable',
   Persisted = 'persisted',
+  DrawLeave = 'draw-leave'
 }
 
 export interface BaseAreaEvent {
@@ -36,5 +38,13 @@ export interface BaseAreaEvent {
 export interface DrawableSetupOptions{
   persist ?: boolean,
   turnInResizableArea ?: boolean,
+  deleteOnLeave ?: boolean,
   
+}
+
+
+
+export interface ResizabelSetupOptions{
+  deleteOnLeave ?: boolean,
+  showAreaOptions ?: boolean, 
 }

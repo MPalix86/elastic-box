@@ -11,6 +11,7 @@ export default class DrawableArea {
   private _setupOtions: DrawableSetupOptions = {
     persist: false,
     turnInResizableArea: false,
+    deleteOnLeave : false,
   };
   private _space: Space;
   private _state: DrawableAreaState = new DrawableAreaState();

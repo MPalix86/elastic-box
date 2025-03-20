@@ -119,15 +119,15 @@ export default class Space {
   // TODO aggiustare la distinzione tra selectedArea e active Area
   // le aree selezionate possono essere n
   //  l'area attiva è una !
-  private _findSelectedArea(): Area | undefined {
-    return this._areas.find(a => a.getState().isThisAreaSelected);
+  private _findActiveResizable(): Area | undefined {
+    return this._areas.find(a => a.getState().isActive);
   }
 
   /**
    * Finds the currently selected area, if any
    * @returns The selected area or undefined if none is selected
    */
-  private _findActivedDrawableArea(): DrawableArea | undefined {
+  private _findActivedDrawable(): DrawableArea | undefined {
     return this._drawableAreas.find(a => a.getState().isActive);
   }
 
@@ -138,6 +138,7 @@ export default class Space {
     this._container.addEventListener('mousemove', this._mouseMove.bind(this));
     this._container.addEventListener('mousedown', this._mouseDown.bind(this));
     this._container.addEventListener('mouseup', this._mouseUp.bind(this));
+    this._container.addEventListener('mouseleave' , this._mouseLeave.bind(this))
   }
 
   /**
@@ -161,6 +162,7 @@ export default class Space {
     else if (mode == CreateMode.drawableArea) this._drawAreaMouseDown(e);
   }
 
+
   /**
    * Handles mouse up events in the space
    * Deselects the current area
@@ -171,14 +173,20 @@ export default class Space {
     else if (mode == CreateMode.drawableArea) this._drawAreamouseUp(e);
   }
 
+  private _mouseLeave(e: MouseEvent): void {
+    const mode = this._createMode;
+    if (mode == CreateMode.drawableArea) this._drawAreaMouseLeave();
+    // else if (mode == CreateMode.drawableArea) this._drawAreaMouseDown(e);
+  }
+
   private _resizeAreaMouseMove(e: MouseEvent) {
-    const area = this._findSelectedArea();
+    const area = this._findActiveResizable();
 
     if (!area) return;
 
     const state = area.getState();
-    const style = area.getStyle();
-
+    const style = area.getStyle();   
+ 
     let newWidth = state.startWidth;
     let newHeight = state.startHeight;
     let newLeft = state.offsetX;
@@ -236,7 +244,7 @@ export default class Space {
   }
 
   private _resizeAreaMouseDown(e: MouseEvent) {
-    const area = this._findSelectedArea();
+    const area = this._findActiveResizable();
     if (!area) return;
 
     const state = area.getState();
@@ -251,14 +259,23 @@ export default class Space {
   }
 
   private _resizeAreaMouseUp(e: MouseEvent) {
-    const area = this._findSelectedArea();
+    const area = this._findActiveResizable();
     if (!area) return;
 
     area.deselect();
   }
+
+  
+  // _resizeAreaMouseLeave(){
+  //   const resizable = this._findActiveResizable()
+  //   const options = resizable.getSetupOptions()
+  //   resizable._executeListeners(AreaEvents.AreaLeave)
+  //   if(options.deleteOnLeave) resizable.remove()
+  // }
+
   private _drawAreaMouseDown(e: MouseEvent) {
     const containerRect = this._container.getBoundingClientRect();
-    const drawable = this._findActivedDrawableArea();
+    const drawable = this._findActivedDrawable();
     if (!drawable) return; // Protezione contro nullable
 
     const style = drawable.getStyle();
@@ -299,7 +316,7 @@ export default class Space {
   private _drawAreaMouseMove(e: MouseEvent) {
     if (e.button != 0) return;
 
-    const drawable = this._findActivedDrawableArea();
+    const drawable = this._findActivedDrawable();
     if (!drawable) return;
 
     const style = drawable.getStyle();
@@ -338,7 +355,7 @@ export default class Space {
   }
 
   private _drawAreamouseUp(e: MouseEvent) {
-    const drawable = this._findActivedDrawableArea();
+    const drawable = this._findActivedDrawable();
     if (!drawable) return;
 
     const state = drawable.getState();
@@ -414,5 +431,12 @@ export default class Space {
     }
 
     drawable._executeListeners(DrawableAreaEvents.drawEnd);
+  }
+
+  _drawAreaMouseLeave(){
+    const drawable = this._findActivedDrawable()
+    const options = drawable.getSetupOptions()
+    drawable._executeListeners(DrawableAreaEvents.DrawLeave)
+    if(options.deleteOnLeave) drawable.remove()
   }
 }

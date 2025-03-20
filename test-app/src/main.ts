@@ -1,5 +1,5 @@
 import { Space, Area, DrawableArea, ResizableCustomStyle, DrawableSetupOptions, DrawableCustomStyle } from '@__pali__/elastic-box';
-import { BaseAreaEvent } from '@__pali__/elastic-box/dist/types/area-types';
+import { BaseAreaEvent, DrawableAreaEvents } from '@__pali__/elastic-box/dist/types/area-types';
 
 /**
  * ElasticBoxDemo - A demonstration of the elastic-box library
@@ -12,8 +12,6 @@ class ElasticBoxDemo {
   private getElementsBtn: HTMLButtonElement;
   private createDrawableBtn: HTMLButtonElement;
   private toggleEventsBtn: HTMLButtonElement;
-  private statusLog: HTMLUListElement;
-  private detectionResults: HTMLDivElement;
 
   // Elastic Box components
   private space: Space;
@@ -43,10 +41,11 @@ class ElasticBoxDemo {
   private drawableOptions: DrawableSetupOptions = {
     turnInResizableArea: true,
     persist: false,
+    deleteOnLeave : true
   };
 
-  private drawableCustomStyle : DrawableCustomStyle ={
-    drawable:{
+  private drawableCustomStyle: DrawableCustomStyle = {
+    drawable: {
       backgroundColor: 'black'
     }
   }
@@ -63,11 +62,11 @@ class ElasticBoxDemo {
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && this.isDrawing) {
         this.cancelDrawing();
-        this.logStatus('Drawing canceled with Escape key');
+        console.log('Drawing canceled with Escape key');
       }
     });
 
-    this.logStatus('Elastic Box Demo initialized');
+    console.log('Elastic Box Demo initialized');
   }
 
   /**
@@ -90,8 +89,6 @@ class ElasticBoxDemo {
     this.getElementsBtn = document.querySelector('#getElements') as HTMLButtonElement;
     this.createDrawableBtn = document.querySelector('#createDrawable') as HTMLButtonElement;
     this.toggleEventsBtn = document.querySelector('#toggleEvents') as HTMLButtonElement;
-    this.statusLog = document.querySelector('#statusLog') as HTMLUListElement;
-    this.detectionResults = document.querySelector('#detectionResults') as HTMLDivElement;
 
     // Validate required elements exist
     if (!this.container) throw new Error('Container element #mainDiv not found');
@@ -99,8 +96,6 @@ class ElasticBoxDemo {
     if (!this.getElementsBtn) throw new Error('Button element #getElements not found');
     if (!this.createDrawableBtn) throw new Error('Button element #createDrawable not found');
     if (!this.toggleEventsBtn) throw new Error('Button element #toggleEvents not found');
-    if (!this.statusLog) throw new Error('Status log element #statusLog not found');
-    if (!this.detectionResults) throw new Error('Detection results element #detectionResults not found');
   }
 
   /**
@@ -108,9 +103,8 @@ class ElasticBoxDemo {
    */
   private initializeSpace(): void {
     this.space = new Space(this.container);
-
-    this.space.setDefaultDrawablebleStyle(this.drawableCustomStyle)
-    this.space.setDefaultResizableStyle(this.resizableCustomStyle)
+    this.space.setDefaultDrawablebleStyle(this.drawableCustomStyle);
+    this.space.setDefaultResizableStyle(this.resizableCustomStyle);
     console.log('Elastic Box space initialized');
   }
 
@@ -137,7 +131,7 @@ class ElasticBoxDemo {
   private createResizableArea(): void {
     const newArea = this.space.createResizableArea();
     this.resizableAreas.push(newArea);
-    this.logStatus('New resizable area created');
+    console.log('New resizable area created');
 
     // Attach event handlers if events are enabled
     if (this.eventsEnabled) {
@@ -152,7 +146,7 @@ class ElasticBoxDemo {
   private createDrawableArea(): void {
     // Prevent creating multiple drawable areas simultaneously
     if (this.isDrawing) {
-      this.logStatus('Please complete the current drawing first');
+      console.log('Please complete the current drawing first');
       return;
     }
 
@@ -162,34 +156,50 @@ class ElasticBoxDemo {
 
     const drawableArea = this.space.createDrawableArea(this.drawableOptions);
     this.drawableAreas.push(drawableArea);
+    
     drawableArea.on('draw-start', () => {
       console.log(`draw-start`);
     });
+    
     drawableArea.on('draw-end', () => {
       console.log(`draw-end`);
+      this.isDrawing = false;
+      this.createDrawableBtn.textContent = 'Create Drawable Area';
+      this.createDrawableBtn.classList.remove('active');
     });
+    
     drawableArea.on('drawing', () => {
       console.log(`drawing`);
     });
 
+    
+
     drawableArea.on('turned-in-resizable', () => {
       const area = drawableArea.getResizable();
       console.log(`turned in resizable`);
+      
       area.on('confirmed', () => {
         console.log(`drawed area turned in resizable confirmed`);
       });
+      
+      // Add to resizable areas array to track it
+      if (area) {
+        this.resizableAreas.push(area);
+        
+        // Attach events if needed
+        if (this.eventsEnabled) {
+          this.attachResizableEvents(area);
+        }
+      }
     });
   }
 
   /**
    * Detect elements under the most recently created resizable area
-   * Uses an improved detection algorithm with precision control
-   * and displays results in the UI
    */
   private detectElementsUnderArea(): void {
     if (this.resizableAreas.length === 0) {
-      this.logStatus('No resizable areas created yet');
-      this.displayDetectionResults([]);
+      console.log('No resizable areas created yet');
       return;
     }
 
@@ -208,80 +218,11 @@ class ElasticBoxDemo {
     // Using the enhanced detection method
     const elementsUnder = this.enhancedDetectElementsUnder(latestArea, 'default', '.wrapper');
 
-    // Display results in the UI
-    this.displayDetectionResults(elementsUnder);
-
     if (elementsUnder && elementsUnder.length > 0) {
-      this.logStatus(`Found ${elementsUnder.length} elements under the LAST created resizable area`);
-      console.log('Elements detected:', elementsUnder);
+      console.log(`Found ${elementsUnder.length} elements under the resizable area`, elementsUnder);
     } else {
-      this.logStatus('No elements found under the LAST created resizable area');
+      console.log('No elements found under the resizable area');
     }
-  }
-
-  /**
-   * Display detection results in the UI
-   * @param results - Array of detected elements with hit counts
-   */
-  private displayDetectionResults(results: any[]): void {
-    // Clear previous results
-    this.detectionResults.innerHTML = '';
-
-    if (!results || results.length === 0) {
-      const noResults = document.createElement('p');
-      noResults.className = 'no-results';
-      noResults.textContent = 'No elements detected under the last created resizable area.';
-      this.detectionResults.appendChild(noResults);
-      return;
-    }
-
-    // Add a header with info about the detection
-    const header = document.createElement('div');
-    header.className = 'no-results';
-    header.style.backgroundColor = '#e7f5ff';
-    header.style.marginBottom = '10px';
-    header.style.color = '#0056b3';
-    header.textContent = `Detected ${results.length} element(s) under the last created resizable area`;
-    this.detectionResults.appendChild(header);
-
-    // Create result elements for each detected element
-    results.forEach((result, index) => {
-      const resultElement = document.createElement('div');
-      resultElement.className = 'element-result';
-
-      // Get element info
-      const element = result.element;
-      let elementInfo = '';
-
-      // Get class or id for element identification
-      if (element.className) {
-        elementInfo = `Class: ${element.className}`;
-      } else if (element.id) {
-        elementInfo = `ID: ${element.id}`;
-      } else {
-        elementInfo = `Element: ${element.tagName.toLowerCase()}`;
-      }
-
-      // Add background color information if available
-      const style = window.getComputedStyle(element);
-      const bgColor = style.backgroundColor;
-      let colorInfo = '';
-
-      if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
-        colorInfo = ` [${bgColor}]`;
-
-        // Apply a subtle background color to match the element
-        resultElement.style.borderLeftColor = bgColor;
-      }
-
-      // Create the result HTML
-      resultElement.innerHTML = `
-        <span class="element-info">${index + 1}. ${elementInfo}${colorInfo}</span>
-        <span class="element-hits">${result.hits} hits</span>
-      `;
-
-      this.detectionResults.appendChild(resultElement);
-    });
   }
 
   /**
@@ -360,7 +301,7 @@ class ElasticBoxDemo {
    */
   private toggleEvents(): void {
     this.eventsEnabled = !this.eventsEnabled;
-    this.toggleEventsBtn.textContent = this.eventsEnabled ? 'Disable Events' : 'Enable Events';
+    this.toggleEventsBtn.textContent = this.eventsEnabled ? 'Disable Resizable Events' : 'Enable Resizable Events';
     this.toggleEventsBtn.classList.toggle('active', this.eventsEnabled);
 
     this.resizableAreas.forEach(area => {
@@ -371,7 +312,7 @@ class ElasticBoxDemo {
       }
     });
 
-    this.logStatus(`Events ${this.eventsEnabled ? 'enabled' : 'disabled'} for all resizable areas (drawable areas have no events)`);
+    console.log(`Events ${this.eventsEnabled ? 'enabled' : 'disabled'} for all resizable areas`);
   }
 
   /**
@@ -396,7 +337,7 @@ class ElasticBoxDemo {
     area.on('move', this.handleMove);
 
     area.on('confirmed', () => {
-      console.log();
+      console.log('Area confirmed');
     });
   }
 
@@ -422,98 +363,43 @@ class ElasticBoxDemo {
     area.off('move', this.handleMove);
   }
 
-  /**
-   * Add a log entry to the status panel
-   * @param message - The message to log
-   */
-  private logStatus(message: string): void {
-    const logItem = document.createElement('li');
-    logItem.textContent = message;
-
-    // Add timestamp to the log
-    const now = new Date();
-    const timestamp = `${now
-      .getHours()
-      .toString()
-      .padStart(2, '0')}:${now
-      .getMinutes()
-      .toString()
-      .padStart(2, '0')}:${now
-      .getSeconds()
-      .toString()
-      .padStart(2, '0')}`;
-    logItem.setAttribute('data-time', timestamp);
-    logItem.innerHTML = `<span style="color: #666; font-size: 11px;">[${timestamp}]</span> ${message}`;
-
-    // Add to DOM
-    this.statusLog.prepend(logItem);
-
-    // Also log to console
-    console.log(`[${timestamp}] ${message}`);
-
-    // Limit the number of log entries (keep the last 20)
-    while (this.statusLog.children.length > 20) {
-      this.statusLog.removeChild(this.statusLog.lastChild as Node);
-    }
-  }
-
-  private handleDrawingStart(e: BaseAreaEvent) {
-    console.log('drawing-start', e);
-  }
-
-  private handleDrawingEnd(e: BaseAreaEvent) {
-    console.log('drawing-end', e);
-  }
-
-  private handlePersist(e: BaseAreaEvent) {
-    console.log('persist', e);
-  }
-
-  private handleTurnInResizable(e: BaseAreaEvent) {
-    const area = e.target.getResizable();
-    // @ts-ignore
-    area.on(`confirmed`, e => {
-      console.log(`area created by drawing was confirmed`);
-    });
-  }
-
   // Event handlers
   private handleSelect = (e: any): void => {
     const area = e.target;
     const resizableEl = area.getResizable();
     resizableEl.style.backgroundColor = 'rgba(0, 0, 255, 0.5)';
-    this.logStatus('Area selected');
+    console.log('Area selected');
   };
 
   private handleDeselect = (e: any): void => {
     const area = e.target;
     const resizableEl = area.getResizable();
     resizableEl.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
-    this.logStatus('Area deselected');
+    console.log('Area deselected');
   };
 
   private handleBeforeDelete = (): void => {
-    this.logStatus('Before delete event triggered');
+    console.log('Before delete event triggered');
   };
 
   private handleAfterDelete = (): void => {
-    this.logStatus('After delete event triggered');
+    console.log('After delete event triggered');
   };
 
   private handleResize = (e: any): void => {
-    this.logStatus('Resize event triggered');
+    console.log('Resize event triggered');
   };
 
   private handleResizeStart = (e: any): void => {
-    this.logStatus('Resize start event triggered');
+    console.log('Resize start event triggered');
   };
 
   private handleResizeEnd = (e: any): void => {
-    this.logStatus('Resize end event triggered');
+    console.log('Resize end event triggered');
   };
 
   private handleMove = (e: any): void => {
-    this.logStatus('Move event triggered');
+    console.log('Move event triggered');
   };
 }
 
