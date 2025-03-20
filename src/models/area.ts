@@ -5,7 +5,6 @@ import Space from './space';
 import { CreateMode } from './space';
 import createResizableStyles, { ResizableCustomStyle } from '../styles/resizable-area-style';
 import transitions from '../styles/transitions';
-import { style } from 'typestyle';
 import { createEventHandler, EventsHandler } from './events-handler';
 
 /**
@@ -23,7 +22,7 @@ export default class Area {
   protected _space: Space;
   protected _state: AreaState = new AreaState();
 
-  private _resizableSetupOptions: ResizabelSetupOptions = {
+  private _setupOptions: ResizabelSetupOptions = {
     deleteOnLeave: false,
     showAreaOptions: true,
   };
@@ -40,7 +39,8 @@ export default class Area {
    * Creates a new Area instance
    * @param space The parent Space object that contains this area
    */
-  constructor(space: Space, style?: ResizableCustomStyle) {
+  constructor(space: Space, style?: ResizableCustomStyle, setupOptions ?: ResizabelSetupOptions) {
+    if(setupOptions) this._setupOptions =  setupOptions
     this._space = space;
     this._eventHandler = createEventHandler();
     if (style) this._customStyle = createResizableStyles(style);
@@ -67,7 +67,7 @@ export default class Area {
   }
 
   getSetupOptions() : ResizabelSetupOptions{
-    return this._resizableSetupOptions;
+    return this._setupOptions;
   }
 
   /**
@@ -249,7 +249,7 @@ export default class Area {
 
     this._container.appendChild(this._resizable);
 
-    if (this._resizableSetupOptions.showAreaOptions) {
+    if (this._setupOptions.showAreaOptions) {
       const areaOptionsStyle = this._customStyle.elements.areaOptions;
       const deleteButtonStyle = this._customStyle.elements.deleteButton;
       const confirmButtonStyle = this._customStyle.elements.confirmButton;

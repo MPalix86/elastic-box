@@ -111,6 +111,14 @@ export default class Space {
     this._drawableCustomStyle = customStyle;
   }
 
+  remove(){
+    this._container.removeEventListener('mousedown',this._mouseMove)
+    this._container.removeEventListener('mousemove',this._mouseMove)
+    this._container.removeEventListener('mouseup',this._mouseUp)
+    this._container.removeEventListener('mouseleave',this._mouseLeave)
+  }
+
+
   /**
    * Finds the currently selected area, if any
    * @returns The selected area or undefined if none is selected
@@ -140,6 +148,7 @@ export default class Space {
     this._container.addEventListener('mouseup', this._mouseUp.bind(this));
     this._container.addEventListener('mouseleave' , this._mouseLeave.bind(this))
   }
+
 
   /**
    * Handles mouse move events for the entire space
@@ -435,6 +444,7 @@ export default class Space {
 
   _drawAreaMouseLeave(){
     const drawable = this._findActivedDrawable()
+    if(! drawable) return
     const options = drawable.getSetupOptions()
     drawable._executeListeners(DrawableAreaEvents.DrawLeave)
     if(options.deleteOnLeave) drawable.remove()
