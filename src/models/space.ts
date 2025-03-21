@@ -111,7 +111,7 @@ export default class Space {
     this._drawableCustomStyle = customStyle;
   }
 
-  remove(){
+  public remove(){
     this._container.removeEventListener('mousedown',this._mouseMove)
     this._container.removeEventListener('mousemove',this._mouseMove)
     this._container.removeEventListener('mouseup',this._mouseUp)
@@ -385,15 +385,14 @@ export default class Space {
     state.top = top;
     state.height = height;
     state.width = width;
-
+    const options = drawable.getSetupOptions();
     // Ignora se troppo piccolo
     if (width < 5 || height < 5) {
-      const options = drawable.getSetupOptions();
       if (!options.persist) this._container.removeChild(drawable.getDrawable());
       return;
     }
 
-    const options = drawable.getSetupOptions();
+
 
     if (options.turnInResizableArea) {
       // Utilizziamo direttamente la posizione del drawable
@@ -430,8 +429,9 @@ export default class Space {
       state.isTurnedInResizable = true;
 
       // Rimuovi il drawable solo dopo aver confermato che il resizable è correttamente posizionato
-      this._container.removeChild(drawable.getDrawable());
+      drawable.remove()
       drawable._executeListeners(DrawableAreaEvents.TurnedInResizable);
+      this.setCreateMode(CreateMode.resizableArea)
     } else if (options.persist) {
       drawable._executeListeners(DrawableAreaEvents.Persisted);
       state.isPersisted = true;
@@ -440,6 +440,7 @@ export default class Space {
     }
 
     drawable._executeListeners(DrawableAreaEvents.drawEnd);
+
   }
 
   _drawAreaMouseLeave(){
@@ -448,5 +449,6 @@ export default class Space {
     const options = drawable.getSetupOptions()
     drawable._executeListeners(DrawableAreaEvents.DrawLeave)
     if(options.deleteOnLeave) drawable.remove()
+    this.setCreateMode(CreateMode.none)
   }
 }

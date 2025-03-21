@@ -174,24 +174,24 @@ class ElasticBoxDemo {
 
     
 
-    drawableArea.on('turned-in-resizable', () => {
-      const area = drawableArea.getResizable();
-      console.log(`turned in resizable`);
+    // drawableArea.on('turned-in-resizable', () => {
+    //   const area = drawableArea.getResizable();
+    //   console.log(`turned in resizable`);
       
-      area.on('confirmed', () => {
-        console.log(`drawed area turned in resizable confirmed`);
-      });
+    //   area.on('confirmed', () => {
+    //     console.log(`drawed area turned in resizable confirmed`);
+    //   });
       
-      // Add to resizable areas array to track it
-      if (area) {
-        this.resizableAreas.push(area);
+    //   // Add to resizable areas array to track it
+    //   if (area) {
+    //     this.resizableAreas.push(area);
         
-        // Attach events if needed
-        if (this.eventsEnabled) {
-          this.attachResizableEvents(area);
-        }
-      }
-    });
+    //     // Attach events if needed
+    //     if (this.eventsEnabled) {
+    //       this.attachResizableEvents(area);
+    //     }
+    //   }
+    // });
   }
 
   /**

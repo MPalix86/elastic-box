@@ -5,6 +5,7 @@ import Space, { CreateMode } from './space';
 import createDrawableStyles from '../styles/drawable-area-style';
 import { createEventHandler, EventsHandler } from './events-handler';
 import { DrawableCustomStyle } from '@__pali__/elastic-box';
+import createResizableStyles from '../styles/resizable-area-style';
 
 export default class DrawableArea {
   private _drawable: HTMLDivElement = document.createElement('div');
@@ -44,6 +45,7 @@ export default class DrawableArea {
     this._container.removeChild(this._drawable)
     this._state.prunable =true;
     this._space.prune();
+    this._space.setCreateMode(CreateMode.none)
   }
 
   getSetupOptions() {
@@ -82,6 +84,7 @@ export default class DrawableArea {
     this._state.isActive = false;
     this._state.prunable = true;
     this._space.prune();
+    this._space.setCreateMode(CreateMode.none)
   }
 
   _mouseDown(event: MouseEvent) {}
