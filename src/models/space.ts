@@ -2,8 +2,8 @@ import Area from './area';
 import Commons from '../types/commons';
 import { ResizableCustomStyle } from '../styles/resizable-area-style';
 import DrawableArea from './drawable-area';
-import { DrawableCustomStyle, DrawableSetupOptions } from '@__pali__/elastic-box';
-import { AreaEvents, DrawableAreaEvents } from '../types/area-types';
+import { AreaEvents, DrawableAreaEvents, DrawableSetupOptions, ResizableSetupOptions } from '../types/area-types';
+import { DrawableCustomStyle } from '../styles/drawable-area-style';
 
 export enum CreateMode {
   resizableArea = 'resizableArea',
@@ -57,9 +57,9 @@ export default class Space {
    * Creates a new area in this space
    * @returns The newly created area
    */
-  public createResizableArea(customStyle?: ResizableCustomStyle): Area {
+  public createResizableArea(customStyle?: ResizableCustomStyle, options?: ResizableSetupOptions): Area {
     this._totalAreaCreatedInSpace++;
-    const area = new Area(this, customStyle);
+    const area = new Area(this, customStyle,options);
     this._areas.push(area);
     return area;
   }

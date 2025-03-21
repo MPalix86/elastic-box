@@ -1,5 +1,4 @@
-import { Space, Area, DrawableArea, ResizableCustomStyle, DrawableSetupOptions, DrawableCustomStyle } from '@__pali__/elastic-box';
-import { BaseAreaEvent, DrawableAreaEvents } from '@__pali__/elastic-box/dist/types/area-types';
+import { Space, Area, DrawableArea, ResizableCustomStyle, DrawableSetupOptions, DrawableCustomStyle, ResizabelSetupOptions } from '@__pali__/elastic-box';
 
 /**
  * ElasticBoxDemo - A demonstration of the elastic-box library
@@ -48,6 +47,10 @@ class ElasticBoxDemo {
     drawable: {
       backgroundColor: 'black'
     }
+  }
+
+  private areaOptions : ResizabelSetupOptions ={
+    fixOnConfirm : false
   }
 
   /**
@@ -129,7 +132,7 @@ class ElasticBoxDemo {
    * Create a new resizable area and attach event handlers
    */
   private createResizableArea(): void {
-    const newArea = this.space.createResizableArea();
+    const newArea = this.space.createResizableArea(undefined, this.areaOptions);
     this.resizableAreas.push(newArea);
     console.log('New resizable area created');
 

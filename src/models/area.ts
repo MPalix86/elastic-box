@@ -1,4 +1,4 @@
-import { AreaEvents, BaseAreaEvent, ResizabelSetupOptions } from '../types/area-types';
+import { AreaEvents, BaseAreaEvent, ResizableSetupOptions } from '../types/area-types';
 import commons from '../types/commons';
 import { AreaState } from './area-state.js';
 import Space from './space';
@@ -22,9 +22,10 @@ export default class Area {
   protected _space: Space;
   protected _state: AreaState = new AreaState();
 
-  private _setupOptions: ResizabelSetupOptions = {
+  private _setupOptions: ResizableSetupOptions = {
     deleteOnLeave: false,
     showAreaOptions: true,
+    fixOnConfirm: true, 
   };
 
   protected _container: HTMLElement;
@@ -39,8 +40,8 @@ export default class Area {
    * Creates a new Area instance
    * @param space The parent Space object that contains this area
    */
-  constructor(space: Space, style?: ResizableCustomStyle, setupOptions ?: ResizabelSetupOptions) {
-    if(setupOptions) this._setupOptions =  setupOptions
+  constructor(space: Space, style?: ResizableCustomStyle, setupOptions ?: ResizableSetupOptions) {
+    this._setupOptions = { ...this._setupOptions, ...setupOptions };
     this._space = space;
     this._eventHandler = createEventHandler();
     if (style) this._customStyle = createResizableStyles(style);
@@ -66,7 +67,7 @@ export default class Area {
     return this._resizable.style;
   }
 
-  getSetupOptions() : ResizabelSetupOptions{
+  getSetupOptions() : ResizableSetupOptions{
     return this._setupOptions;
   }
 
@@ -300,6 +301,16 @@ export default class Area {
     this._resizable.classList.add('resizable');
   }
 
+
+  removeButtosnPanel(){
+    this._resizable.removeChild(this._buttonsPanel)
+  }
+
+  addButtonsPanel(){
+    if(this._resizable.contains(this._buttonsPanel)) return
+    this._resizable.appendChild(this._buttonsPanel)
+  }
+
   _preventAreaOptionTrigger(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
@@ -323,6 +334,8 @@ export default class Area {
    * Removes event listeners and marks the area as prunable
    */
   private _delete() {
+    this._executeListeners(AreaEvents.deleted);
+    
     this._unboundlisteners();
     this._state.prunable = true;
     this._resizable.classList.add(transitions.shrinkKeyframe);
@@ -333,7 +346,6 @@ export default class Area {
       () => {
         this._container.removeChild(this._resizable);
         this._space.prune(); // TODO aggiustre il discorso dei prune
-        this._executeListeners(AreaEvents.AfterDelete);
         this._space.setCreateMode(CreateMode.none);
       },
       { once: true }
@@ -342,15 +354,21 @@ export default class Area {
 
   private _confirm() {
     this._executeListeners(AreaEvents.Confirmed);
-
+    
     this._resizable.classList.add(transitions.confirmKeyframe);
-
+    
     // Attendi che l'animazione sia completata prima di rimuovere l'elemento
     this._resizable.addEventListener(
       'animationend',
       () => {
-        this._unboundlisteners();
-        this._resizable.removeChild(this._buttonsPanel);
+        // Rimuovi la classe dell'animazione per poterla riattivare in futuro
+        this._resizable.classList.remove(transitions.confirmKeyframe);
+        
+        if(this._setupOptions.fixOnConfirm){
+          this._unboundlisteners();
+          this._resizable.removeChild(this._buttonsPanel);
+        }
+        
         this._resizable.style.cursor = 'default';
       },
       { once: true }

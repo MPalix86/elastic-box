@@ -9,8 +9,7 @@ export const enum AreaEvents {
   Move = 'move',
   Select = 'select',
   Deselect = 'deselect',
-  BeforeDelete = 'before-delete',
-  AfterDelete = 'after-delete',
+  deleted = 'deleted',
   Confirmed = 'confirmed',
   AreaLeave = 'area-leave'
 }
@@ -44,7 +43,8 @@ export interface DrawableSetupOptions{
 
 
 
-export interface ResizabelSetupOptions{
+export interface ResizableSetupOptions{
   deleteOnLeave ?: boolean,
   showAreaOptions ?: boolean, 
+  fixOnConfirm ?: boolean,
 }

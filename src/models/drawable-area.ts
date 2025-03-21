@@ -9,7 +9,7 @@ import createResizableStyles from '../styles/resizable-area-style';
 
 export default class DrawableArea {
   private _drawable: HTMLDivElement = document.createElement('div');
-  private _setupOtions: DrawableSetupOptions = {
+  private _setupOptions: DrawableSetupOptions = {
     persist: false,
     turnInResizableArea: false,
     deleteOnLeave : false,
@@ -27,7 +27,7 @@ export default class DrawableArea {
     this._space = space;
     this._eventsHandler = createEventHandler()
     this._container = space.getContainer();
-    if (options) this._setupOtions = options;
+    this._setupOptions = { ...this._setupOptions, ...options };
     this._state.isActive = true;
     this._space.setCreateMode(CreateMode.drawableArea); // this enable space to create a drawable area !
     this._createNewDrawableDiv();
@@ -49,7 +49,7 @@ export default class DrawableArea {
   }
 
   getSetupOptions() {
-    return this._setupOtions;
+    return this._setupOptions;
   }
   getStyle() {
     return this._drawable.style;
