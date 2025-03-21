@@ -215,8 +215,11 @@ class ElasticBoxDemo {
       resizableEl.style.borderColor = originalBorderColor;
     }, 1000);
 
+    let elementsUnder
     // Using the enhanced detection method
-    const elementsUnder = this.enhancedDetectElementsUnder(latestArea, 'default', '.wrapper');
+   this.resizableAreas.forEach(a=>{
+      elementsUnder = a.detectElementsUnderArea('corner')
+    })
 
     if (elementsUnder && elementsUnder.length > 0) {
       console.log(`Found ${elementsUnder.length} elements under the resizable area`, elementsUnder);
@@ -225,76 +228,6 @@ class ElasticBoxDemo {
     }
   }
 
-  /**
-   * Enhanced detection of elements under a resizable area
-   * @param area - The resizable area to check under
-   * @param precision - Precision level for detection points (higher = more accurate but slower)
-   * @param selector - CSS selector to filter elements (e.g. '.wrapper')
-   * @returns An array of elements found under the area, sorted by hit count
-   */
-  private enhancedDetectElementsUnder(area: Area, precision?: number | 'default', selector?: string): any[] {
-    const resizableEl = area.getResizable();
-    const movableRect = resizableEl.getBoundingClientRect();
-    const container = this.container.getBoundingClientRect();
-
-    const height = movableRect.height;
-    const width = movableRect.width;
-
-    // Set precision level (lower value = more test points)
-    if (precision === undefined) precision = 0.25;
-    else if (precision === 'default') precision = 0.25;
-    else precision = 1 / Math.abs(precision as number);
-
-    // Start with corners as test points
-    const testPoints = [
-      { x: movableRect.left, y: movableRect.top }, // Top-left corner
-      { x: movableRect.right, y: movableRect.top }, // Top-right corner
-      { x: movableRect.right, y: movableRect.bottom }, // Bottom-right corner
-      { x: movableRect.left, y: movableRect.bottom }, // Bottom-left corner
-    ];
-
-    // Add additional test points based on precision
-    for (let i = 0; i <= width; i += width * precision) {
-      for (let j = 0; j <= height; j += height * precision) {
-        const x = movableRect.left + i;
-        const y = movableRect.top + j;
-        testPoints.push({ x, y });
-      }
-    }
-
-    // Map to count how many test points are inside each element
-    const elementHits = new Map();
-
-    // Use elementFromPoint for each test point
-    testPoints.forEach(point => {
-      // Get the element at the current position
-      const element = document.elementFromPoint(point.x, point.y);
-
-      if (element) {
-        // Find the target element using closest() for better performance
-        // If selector is provided, find the closest matching ancestor
-        // Otherwise, use the element itself
-        const targetElement = selector ? element.closest(selector) : element;
-
-        // If we found a matching element, increment the hit count
-        if (targetElement) {
-          const hits = elementHits.get(targetElement) || 0;
-          elementHits.set(targetElement, hits + 1);
-        }
-      }
-    });
-
-    // Convert the map to an array of elements
-    const elementsUnder = Array.from(elementHits.entries())
-      .filter(([_, hits]) => hits > 0) // Remove elements without hits
-      .sort((a, b) => b[1] - a[1]) // Sort by number of hits (highest to lowest)
-      .map(([element, hits]) => ({
-        element,
-        hits,
-      }));
-
-    return elementsUnder;
-  }
 
   /**
    * Toggle events on/off for all resizable areas

@@ -101,10 +101,10 @@ export default class Area {
   detectElementsUnderArea(precision?: number | 'default' | 'corner', selector?: string) {
     const movableRect = this._resizable.getBoundingClientRect();
     const container = this._container.getBoundingClientRect();
-
+    
     const height = movableRect.height;
     const width = movableRect.width;
-
+    
     // Set precision with proper defaults
     if (precision === undefined || precision === 'default') {
       precision = 0.25;
@@ -113,7 +113,7 @@ export default class Area {
     } else {
       precision = 1 / Math.abs(precision);
     }
-
+    
     // Add corner points first
     const testPoints = [
       { x: movableRect.left, y: movableRect.top }, // Top-left corner
@@ -121,70 +121,71 @@ export default class Area {
       { x: movableRect.right, y: movableRect.bottom }, // Bottom-right corner
       { x: movableRect.left, y: movableRect.bottom }, // Bottom-left corner
     ];
-
+    
     if (typeof precision === 'number' && precision > 0) {
       // Calculate the step size based on precision and dimensions
       const stepX = width * precision;
       const stepY = height * precision;
-
+      
       // Limit the maximum number of points to prevent browser freezing
       const maxPointsPerDimension = 20;
       const actualStepX = Math.max(stepX, width / maxPointsPerDimension);
       const actualStepY = Math.max(stepY, height / maxPointsPerDimension);
-
+      
       // Add more points for greater accuracy, but with a reasonable limit
       for (let i = 0; i <= width; i += actualStepX) {
         for (let j = 0; j <= height; j += actualStepY) {
           // Skip the very first point (0,0) as it's already in the corners array
           if (i === 0 && j === 0) continue;
-
+          
           const x = movableRect.left + i;
           const y = movableRect.top + j;
-
-          const relativeX = x - container.left;
-          const relativeY = y - container.top;
-
-          testPoints.push({ x: relativeX, y: relativeY });
+          
+          testPoints.push({ x, y });
         }
       }
     }
-
-    // Map to count how many test points are inside each wrapper
-    const elementHits = new Map();
-
-    // Use elementFromPoint for each test point
-    testPoints.forEach(point => {
-      // Get the element at the current position
-      const element = document.elementFromPoint(point.x, point.y);
-
+    
+    // Salva temporaneamente lo stile dell'elemento resizable
+    const originalPointerEvents = this._resizable.style.pointerEvents;
+    
+    // Imposta pointerEvents a 'none' per renderlo "invisibile" ai test di hit
+    this._resizable.style.pointerEvents = 'none';
+    
+    // Ora esegui il rilevamento degli elementi
+    const elementsMap = new Map(); // Usa una Map per contare gli hit per elemento
+    
+    for (const point of testPoints) {
+      // Converti le coordinate in coordinate relative al container se necessario
+      const testX = point.x;
+      const testY = point.y;
+      
+      const element = document.elementFromPoint(testX, testY);
+      
       if (element) {
-        // Find the nearest wrapper by traversing up the DOM
-        let searched = null;
-
-        if (selector) {
-          searched = element.closest(selector);
-        } else {
-          searched = element;
-        }
-
-        // If we found a wrapper, increment the count
-        if (searched) {
-          const hits = elementHits.get(searched) || 0;
-          elementHits.set(searched, hits + 1);
+        // Verifica se l'elemento corrisponde al selettore fornito
+        const matchesSelector = !selector || element.matches(selector) || element.closest(selector);
+        
+        if (matchesSelector) {
+          // Incrementa il conteggio degli hit per questo elemento
+          const hitCount = elementsMap.get(element) || 0;
+          elementsMap.set(element, hitCount + 1);
         }
       }
+    }
+    
+    // Ripristina lo stile originale dell'elemento resizable
+    this._resizable.style.pointerEvents = originalPointerEvents;
+    
+    // Converti la Map in un array di risultati
+    const results = Array.from(elementsMap.entries()).map(([element, hits]) => {
+      return { element, hits };
     });
-
-    // Convert the map to an array of elements
-    const elementsUnder = Array.from(elementHits.entries())
-      .filter(([_, hits]) => hits > 0) // Remove elements without hits
-      .sort((a, b) => b[1] - a[1]) // Sort by number of hits (highest to lowest)
-      .map(([element, hits]) => ({
-        element,
-        hits,
-      }));
-
-    return elementsUnder;
+    
+    // Ordina i risultati per numero di hit (opzionale)
+    results.sort((a, b) => b.hits - a.hits);
+    
+    return results;
   }
 
   createResizableArea() {
