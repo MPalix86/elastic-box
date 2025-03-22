@@ -36,6 +36,13 @@ export default class Space {
 
   private _drawableCustomStyle: DrawableCustomStyle;
 
+  private _boundedMouseMove:  (e: MouseEvent)=>void
+  private _boundedMouseUp:  (e: MouseEvent)=>void
+  private _boundedMouseDonw:  (e: MouseEvent)=>void
+  private _boundedMouseLeave:  (e: MouseEvent)=>void
+  private _boundedPreventDragging: (e: Event)=>void
+  
+
   /**
    * Creates a new Space with the given container
    * @param container HTML element that will contain the areas
@@ -112,10 +119,11 @@ export default class Space {
   }
 
   public remove(){
-    this._container.removeEventListener('mousedown',this._mouseMove)
-    this._container.removeEventListener('mousemove',this._mouseMove)
-    this._container.removeEventListener('mouseup',this._mouseUp)
-    this._container.removeEventListener('mouseleave',this._mouseLeave)
+    this._container.removeEventListener('mousedown',this._boundedMouseMove)
+    this._container.removeEventListener('mousemove',this._boundedMouseMove)
+    this._container.removeEventListener('mouseup',this._boundedMouseUp)
+    this._container.removeEventListener('mouseleave',this._boundedMouseLeave)
+    this._container.removeEventListener('dragstart',this._boundedPreventDragging)
   }
 
 
@@ -143,11 +151,20 @@ export default class Space {
    * Sets up event listeners for the space container
    */
   private _createSpace(): void {
-    this._container.addEventListener('mousemove', this._mouseMove.bind(this));
-    this._container.addEventListener('mousedown', this._mouseDown.bind(this));
-    this._container.addEventListener('mouseup', this._mouseUp.bind(this));
-    this._container.addEventListener('mouseleave' , this._mouseLeave.bind(this))
+
+     this._boundedMouseMove = this._mouseMove.bind(this)
+     this._boundedMouseUp=  this._mouseUp.bind(this)
+     this._boundedMouseDonw =this._mouseDown.bind(this)   
+     this._boundedMouseLeave = this._mouseLeave.bind(this)
+     this._boundedPreventDragging = this._preventDragging.bind(this)
+  
+
+    this._container.addEventListener('mousemove', this._boundedMouseMove );
+    this._container.addEventListener('mousedown',  this._boundedMouseDonw);
+    this._container.addEventListener('mouseup',  this._boundedMouseUp);
+    this._container.addEventListener('mouseleave' , this._boundedMouseLeave )
   }
+
 
 
   /**
@@ -274,7 +291,10 @@ export default class Space {
     area.deselect();
   }
 
-  
+  _preventDragging(e: Event){
+    e.preventDefault();
+    e.stopPropagation()
+  }
   // _resizeAreaMouseLeave(){
   //   const resizable = this._findActiveResizable()
   //   const options = resizable.getSetupOptions()
@@ -283,6 +303,7 @@ export default class Space {
   // }
 
   private _drawAreaMouseDown(e: MouseEvent) {
+    this._container.addEventListener('dragstart',this._boundedPreventDragging)
     const containerRect = this._container.getBoundingClientRect();
     const drawable = this._findActivedDrawable();
     if (!drawable) return; // Protezione contro nullable
@@ -290,7 +311,7 @@ export default class Space {
     const style = drawable.getStyle();
     const state = drawable.getState();
     state.isMouseDown = true;
-    drawable.startDraw();
+  
 
     // Considera lo scroll del contenitore
     const scrollLeft = this._container.scrollLeft || 0;
@@ -364,6 +385,7 @@ export default class Space {
   }
 
   private _drawAreamouseUp(e: MouseEvent) {
+    this._container.removeEventListener('dragstart',this._boundedPreventDragging)
     const drawable = this._findActivedDrawable();
     if (!drawable) return;
 
@@ -371,84 +393,23 @@ export default class Space {
     if (!state.isMouseDown) return; // Non fare nulla se non era in disegno
 
     state.isMouseDown = false;
-    drawable.endDrawing();
+    drawable._endDrawing();
 
-    // Ottieni la posizione e dimensione correnti dallo stile
-    const style = drawable.getStyle();
-    // Rimuovi 'px' e converti in numeri
-    const left = parseInt(style.left);
-    const top = parseInt(style.top);
-    const width = parseInt(style.width);
-    const height = parseInt(style.height);
-
-    state.left = left;
-    state.top = top;
-    state.height = height;
-    state.width = width;
     const options = drawable.getSetupOptions();
-    // Ignora se troppo piccolo
-    if (width < 5 || height < 5) {
-      if (!options.persist) this._container.removeChild(drawable.getDrawable());
-      return;
-    }
-
-
-
-    if (options.turnInResizableArea) {
-      // Utilizziamo direttamente la posizione del drawable
-      // senza alcuna trasformazione di coordinate
-      const resizableStyle = structuredClone(this._resizableCustomSyle);
-      resizableStyle.resizable = resizableStyle.resizable || {};
-      resizableStyle.resizable.width = `${width}px`;
-      resizableStyle.resizable.height = `${height}px`;
-      resizableStyle.resizable.left = `${left}px`;
-      resizableStyle.resizable.top = `${top}px`;
-
-      // Crea un'area resizable con le stesse coordinate esatte
-      const area = this.createResizableArea(resizableStyle);
-
-      // Forza le stesse coordinate anche dopo la creazione per sicurezza
-      const resizableElement = area.getResizable();
-      if (resizableElement) {
-        resizableElement.style.position = 'absolute';
-        resizableElement.style.left = `${left}px`;
-        resizableElement.style.top = `${top}px`;
-        resizableElement.style.width = `${width}px`;
-        resizableElement.style.height = `${height}px`;
-
-        // Log per debug
-        // console.log('Resizable position set to:', {
-        //   left: resizableElement.style.left,
-        //   top: resizableElement.style.top,
-        //   width: resizableElement.style.width,
-        //   height: resizableElement.style.height,
-        // });
-      }
-
-      drawable.setResizable(area);
-      state.isTurnedInResizable = true;
-
-      // Rimuovi il drawable solo dopo aver confermato che il resizable è correttamente posizionato
-      drawable.remove()
-      drawable._executeListeners(DrawableAreaEvents.TurnedInResizable);
-      this.setCreateMode(CreateMode.resizableArea)
-    } else if (options.persist) {
-      drawable._executeListeners(DrawableAreaEvents.Persisted);
-      state.isPersisted = true;
-    } else {
-      this._container.removeChild(drawable.getDrawable());
-    }
-
+    if(options.removeOnMouseUp) drawable.remove()
+    else state.isPersisted = true;
+    
     drawable._executeListeners(DrawableAreaEvents.drawEnd);
-
+  
   }
+
 
   _drawAreaMouseLeave(){
     const drawable = this._findActivedDrawable()
     if(! drawable) return
     const options = drawable.getSetupOptions()
     drawable._executeListeners(DrawableAreaEvents.DrawLeave)
-    if(options.deleteOnLeave) drawable.remove()
-    this.setCreateMode(CreateMode.none)
+    if(options.removeOnMouseLeave) drawable.remove()
+    if(options.removeOnMouseLeave) this.setCreateMode(CreateMode.none)
   }
 }

@@ -6,6 +6,9 @@ export interface DrawableCustomStyle {
   drawable?: Partial<DrawableStyle>;
 }
 
+
+
+
 // Interfaccia semplificata per lo stile dell'area disegnabile
 interface DrawableStyle {
   border?: string;

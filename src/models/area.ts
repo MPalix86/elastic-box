@@ -23,9 +23,7 @@ export default class Area {
   protected _state: AreaState = new AreaState();
 
   private _setupOptions: ResizableSetupOptions = {
-    deleteOnLeave: false,
     showAreaOptions: true,
-    fixOnConfirm: true, 
   };
 
   protected _container: HTMLElement;
@@ -40,7 +38,7 @@ export default class Area {
    * Creates a new Area instance
    * @param space The parent Space object that contains this area
    */
-  constructor(space: Space, style?: ResizableCustomStyle, setupOptions ?: ResizableSetupOptions) {
+  constructor(space: Space, style?: ResizableCustomStyle, setupOptions?: ResizableSetupOptions) {
     this._setupOptions = { ...this._setupOptions, ...setupOptions };
     this._space = space;
     this._eventHandler = createEventHandler();
@@ -67,7 +65,7 @@ export default class Area {
     return this._resizable.style;
   }
 
-  getSetupOptions() : ResizableSetupOptions{
+  getSetupOptions(): ResizableSetupOptions {
     return this._setupOptions;
   }
 
@@ -102,10 +100,10 @@ export default class Area {
   detectElementsUnderArea(precision?: number | 'default' | 'corner', selector?: string) {
     const movableRect = this._resizable.getBoundingClientRect();
     const container = this._container.getBoundingClientRect();
-    
+
     const height = movableRect.height;
     const width = movableRect.width;
-    
+
     // Set precision with proper defaults
     if (precision === undefined || precision === 'default') {
       precision = 0.25;
@@ -114,7 +112,7 @@ export default class Area {
     } else {
       precision = 1 / Math.abs(precision);
     }
-    
+
     // Add corner points first
     const testPoints = [
       { x: movableRect.left, y: movableRect.top }, // Top-left corner
@@ -122,51 +120,51 @@ export default class Area {
       { x: movableRect.right, y: movableRect.bottom }, // Bottom-right corner
       { x: movableRect.left, y: movableRect.bottom }, // Bottom-left corner
     ];
-    
+
     if (typeof precision === 'number' && precision > 0) {
       // Calculate the step size based on precision and dimensions
       const stepX = width * precision;
       const stepY = height * precision;
-      
+
       // Limit the maximum number of points to prevent browser freezing
       const maxPointsPerDimension = 20;
       const actualStepX = Math.max(stepX, width / maxPointsPerDimension);
       const actualStepY = Math.max(stepY, height / maxPointsPerDimension);
-      
+
       // Add more points for greater accuracy, but with a reasonable limit
       for (let i = 0; i <= width; i += actualStepX) {
         for (let j = 0; j <= height; j += actualStepY) {
           // Skip the very first point (0,0) as it's already in the corners array
           if (i === 0 && j === 0) continue;
-          
+
           const x = movableRect.left + i;
           const y = movableRect.top + j;
-          
+
           testPoints.push({ x, y });
         }
       }
     }
-    
+
     // Salva temporaneamente lo stile dell'elemento resizable
     const originalPointerEvents = this._resizable.style.pointerEvents;
-    
+
     // Imposta pointerEvents a 'none' per renderlo "invisibile" ai test di hit
     this._resizable.style.pointerEvents = 'none';
-    
+
     // Ora esegui il rilevamento degli elementi
     const elementsMap = new Map(); // Usa una Map per contare gli hit per elemento
-    
+
     for (const point of testPoints) {
       // Converti le coordinate in coordinate relative al container se necessario
       const testX = point.x;
       const testY = point.y;
-      
+
       const element = document.elementFromPoint(testX, testY);
-      
+
       if (element) {
         // Verifica se l'elemento corrisponde al selettore fornito
         const matchesSelector = !selector || element.matches(selector) || element.closest(selector);
-        
+
         if (matchesSelector) {
           // Incrementa il conteggio degli hit per questo elemento
           const hitCount = elementsMap.get(element) || 0;
@@ -174,18 +172,18 @@ export default class Area {
         }
       }
     }
-    
+
     // Ripristina lo stile originale dell'elemento resizable
     this._resizable.style.pointerEvents = originalPointerEvents;
-    
+
     // Converti la Map in un array di risultati
     const results = Array.from(elementsMap.entries()).map(([element, hits]) => {
       return { element, hits };
     });
-    
+
     // Ordina i risultati per numero di hit (opzionale)
     results.sort((a, b) => b.hits - a.hits);
-    
+
     return results;
   }
 
@@ -274,8 +272,6 @@ export default class Area {
       this._resizable.appendChild(this._buttonsPanel);
     }
 
-
-
     const resizableStyles = this._customStyle.elements.resizable;
 
     this._resizable.classList.add(resizableStyles.class);
@@ -301,15 +297,63 @@ export default class Area {
     this._resizable.classList.add('resizable');
   }
 
-
-  removeButtosnPanel(){
-    this._resizable.removeChild(this._buttonsPanel)
+  removeButtosnPanel() {
+    this._resizable.removeChild(this._buttonsPanel);
   }
 
-  addButtonsPanel(){
-    if(this._resizable.contains(this._buttonsPanel)) return
-    this._resizable.appendChild(this._buttonsPanel)
+  addButtonsPanel() {
+    if (this._resizable.contains(this._buttonsPanel)) return;
+    this._resizable.appendChild(this._buttonsPanel);
   }
+
+  fix() {
+    this._resizable.style.cursor = 'default';
+    this._unboundlisteners();
+    if(this._resizable.contains(this._buttonsPanel)) this._resizable.removeChild(this._buttonsPanel);
+  }
+
+  async animateBlink(){
+    this._resizable.classList.add(transitions.confirmKeyframe);
+    // Attendi che l'animazione sia completata prima di rimuovere l'elemento
+    this._resizable.addEventListener(
+      'animationend',
+      () => {
+        // Rimuovi la classe dell'animazione per poterla riattivare in futuro
+        this._resizable.classList.remove(transitions.confirmKeyframe);
+        return
+      },
+      { once: true }
+    );
+  }
+  
+
+  async animateShake() {
+    // Rimuovi eventuali animazioni precedenti
+    this._resizable.classList.remove(transitions.errorShakeKeyframe);
+    
+    // Forza un reflow del browser prima di aggiungere la classe dell'animazione
+    void this._resizable.offsetWidth;
+    
+    // Aggiungi la classe dell'animazione
+    this._resizable.classList.add(transitions.errorShakeKeyframe);
+    
+    // Crea una Promise che si risolve quando l'animazione è completata
+    return new Promise<void>((resolve) => {
+      this._resizable.addEventListener(
+        'animationend',
+        () => {
+          // Rimuovi la classe dell'animazione per poterla riattivare in futuro
+          this._resizable.classList.remove(transitions.errorShakeKeyframe);
+          resolve();
+        },
+        { once: true }
+      );
+    });
+  }
+
+  
+
+  
 
   _preventAreaOptionTrigger(e: MouseEvent) {
     e.preventDefault();
@@ -325,9 +369,9 @@ export default class Area {
     this._resizable.removeEventListener('mousedown', this._boundMouseDown);
     this._deleteButton.removeEventListener('click', this._boundDelete);
     this._confirmButton.removeEventListener('click', this._boundConfirm);
-    this._buttonsPanel.removeEventListener('mousemove', this._preventAreaOptionTrigger)
-    this._buttonsPanel.removeEventListener('mousedown', this._preventAreaOptionTrigger)
-    this._buttonsPanel.removeEventListener('mouseup', this._preventAreaOptionTrigger)
+    this._buttonsPanel.removeEventListener('mousemove', this._preventAreaOptionTrigger);
+    this._buttonsPanel.removeEventListener('mousedown', this._preventAreaOptionTrigger);
+    this._buttonsPanel.removeEventListener('mouseup', this._preventAreaOptionTrigger);
   }
   /**
    * Handles the deletion of this area
@@ -335,7 +379,7 @@ export default class Area {
    */
   private _delete() {
     this._executeListeners(AreaEvents.deleted);
-    
+
     this._unboundlisteners();
     this._state.prunable = true;
     this._resizable.classList.add(transitions.shrinkKeyframe);
@@ -352,27 +396,11 @@ export default class Area {
     );
   }
 
+
+  
+
   private _confirm() {
     this._executeListeners(AreaEvents.Confirmed);
-    
-    this._resizable.classList.add(transitions.confirmKeyframe);
-    
-    // Attendi che l'animazione sia completata prima di rimuovere l'elemento
-    this._resizable.addEventListener(
-      'animationend',
-      () => {
-        // Rimuovi la classe dell'animazione per poterla riattivare in futuro
-        this._resizable.classList.remove(transitions.confirmKeyframe);
-        
-        if(this._setupOptions.fixOnConfirm){
-          this._unboundlisteners();
-          this._resizable.removeChild(this._buttonsPanel);
-        }
-        
-        this._resizable.style.cursor = 'default';
-      },
-      { once: true }
-    );
   }
 
   /**

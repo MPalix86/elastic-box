@@ -1,7 +1,8 @@
 // @ts-nocheck
 import { style, keyframes } from 'typestyle';
 
-// ----- CONFIRM ANIMATION ----- 
+// ----- CONFIRM ANIMATION -----
+
 // Animazione keyframe per la conferma
 const confirmAnimation = keyframes({
   '0%': {
@@ -16,6 +17,28 @@ const confirmAnimation = keyframes({
     boxShadow: '0 0 2px rgba(80, 80, 80, 0.3)',
     transform: 'scale(1)',
   },
+});
+
+// Definizione dell'animazione di shake
+const shakeAnimation = keyframes({
+  '0%': { transform: 'translateX(0)' },
+  '10%': { transform: 'translateX(-10px)' },
+  '20%': { transform: 'translateX(10px)' },
+  '30%': { transform: 'translateX(-8px)' },
+  '40%': { transform: 'translateX(8px)' },
+  '50%': { transform: 'translateX(-5px)' },
+  '60%': { transform: 'translateX(5px)' },
+  '70%': { transform: 'translateX(-3px)' },
+  '80%': { transform: 'translateX(3px)' },
+  '90%': { transform: 'translateX(-1px)' },
+  '100%': { transform: 'translateX(0)' }
+});
+
+// Classe per l'animazione di shake con bordo rosso
+const errorShakeKeyframeClass = style({
+  animation: `${shakeAnimation} 0.8s ease-in-out`,
+  animationIterationCount: '1',
+  border: '3px solid #ff3333 !important',
 });
 
 // Classe per conferma con transizione
@@ -33,6 +56,7 @@ const confirmActiveClass = style({
 const confirmKeyframeClass = style({
   animation: `${confirmAnimation} 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards`,
 });
+
 // ----- FADE OUT ANIMATION -----
 // Crea l'animazione di fade out
 const fadeOutAnimation = keyframes({
@@ -110,7 +134,7 @@ const shrinkKeyframeClass = style({
   animation: `${shrinkAnimation} 0.2s cubic-bezier(0.165, 0.84, 0.44, 1) forwards`,
 });
 
-// Definisci l'oggetto transitions con entrambi i tipi di animazione
+// Definisci l'oggetto transitions con tutti i tipi di animazione
 const transitions = {
   // La transizione di fade out
   fadeOut: {
@@ -125,11 +149,16 @@ const transitions = {
     active: shrinkActiveClass,
   },
   shrinkKeyframe: shrinkKeyframeClass,
+  
+  // La transizione di conferma
   confirm: {
     base: confirmClass,
     active: confirmActiveClass,
   },
   confirmKeyframe: confirmKeyframeClass,
+  
+  // Animazione di errore (shake)
+  errorShakeKeyframe: errorShakeKeyframeClass,
 };
 
 export default transitions;

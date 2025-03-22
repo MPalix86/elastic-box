@@ -58,6 +58,8 @@ const confirmGlowAnimation = keyframes({
   '100%': { boxShadow: '0 0 5px rgba(46, 204, 113, 0.5)' },
 });
 
+
+
 // Stili di base per elementi riutilizzabili
 const baseButtonStyle = {
   position: 'absolute',

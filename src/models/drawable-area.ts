@@ -1,18 +1,16 @@
-import { BaseAreaEvent, DrawableAreaEvents, DrawableSetupOptions } from '../types/area-types';
+import { BaseAreaEvent, DrawableAreaEvents, DrawableSetupOptions, ResizableSetupOptions } from '../types/area-types';
 import Area from './area';
 import DrawableAreaState from './drawable-area-state';
 import Space, { CreateMode } from './space';
-import createDrawableStyles from '../styles/drawable-area-style';
+import createDrawableStyles, { DrawableCustomStyle } from '../styles/drawable-area-style';
 import { createEventHandler, EventsHandler } from './events-handler';
-import { DrawableCustomStyle } from '@__pali__/elastic-box';
-import createResizableStyles from '../styles/resizable-area-style';
+import { ResizableCustomStyle } from '../styles/resizable-area-style';
 
 export default class DrawableArea {
   private _drawable: HTMLDivElement = document.createElement('div');
   private _setupOptions: DrawableSetupOptions = {
-    persist: false,
-    turnInResizableArea: false,
-    deleteOnLeave : false,
+    removeOnMouseLeave : true,
+    removeOnMouseUp : true
   };
   private _space: Space;
   private _state: DrawableAreaState = new DrawableAreaState();
@@ -42,7 +40,7 @@ export default class DrawableArea {
   }
 
   remove(){
-    this._container.removeChild(this._drawable)
+    if(this._container.contains(this._drawable)) this._container.removeChild(this._drawable)
     this._state.prunable =true;
     this._space.prune();
     this._space.setCreateMode(CreateMode.none)
@@ -70,17 +68,50 @@ export default class DrawableArea {
     return this._resizable = val;
   }
 
-  startDraw() {
-    // this._space.setCreateMode(CreateMode.drawableArea)
-  }
 
-  drawing() {
-    const state = this._state;
-    state.isDrawing = true;
-  }
+  turnInresizable(customStyle ?: ResizableCustomStyle, options ?: ResizableSetupOptions): Area{
+    const left = parseInt(this.getStyle().left);
+    const top = parseInt(this.getStyle().top);
+    const width = parseInt(this.getStyle().width);
+    const height = parseInt(this.getStyle().height);
+          // Utilizziamo direttamente la posizione del drawable
+      // senza alcuna trasformazione di coordinate
+      const resizableStyle = structuredClone(this._space.getResizableCustomStyle());
+      resizableStyle.resizable = resizableStyle.resizable || {};
+      resizableStyle.resizable.width = `${width}px`;
+      resizableStyle.resizable.height = `${height}px`;
+      resizableStyle.resizable.left = `${left}px`;
+      resizableStyle.resizable.top = `${top}px`;
 
-  endDrawing() {
-    this._space.setCreateMode(CreateMode.none);
+      let finalStyle : ResizableCustomStyle = resizableStyle
+      if(customStyle) finalStyle = {...resizableStyle, ...customStyle}
+
+      // Crea un'area resizable con le stesse coordinate esatte
+      const area = this._space.createResizableArea(finalStyle,options);
+
+      // Forza le stesse coordinate anche dopo la creazione per sicurezza
+      const resizableElement = area.getResizable();
+      if (resizableElement) {
+        resizableElement.style.position = 'absolute';
+        resizableElement.style.left = `${left}px`;
+        resizableElement.style.top = `${top}px`;
+        resizableElement.style.width = `${width}px`;
+        resizableElement.style.height = `${height}px`;
+
+      }
+
+      this.setResizable(area);
+      this._state.isTurnedInResizable = true;
+
+      // Rimuovi il drawable solo dopo aver confermato che il resizable è correttamente posizionato
+      this.remove()
+      this._executeListeners(DrawableAreaEvents.TurnedInResizable);
+      this._space.setCreateMode(CreateMode.resizableArea)
+      return this._resizable;
+  }
+  
+
+   _endDrawing() {
     this._state.isActive = false;
     this._state.prunable = true;
     this._space.prune();

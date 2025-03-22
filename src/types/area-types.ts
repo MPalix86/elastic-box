@@ -35,16 +35,12 @@ export interface BaseAreaEvent {
 
 
 export interface DrawableSetupOptions{
-  persist ?: boolean,
-  turnInResizableArea ?: boolean,
-  deleteOnLeave ?: boolean,
-  
+  removeOnMouseUp ?: boolean,
+  removeOnMouseLeave?: boolean
 }
 
 
 
 export interface ResizableSetupOptions{
-  deleteOnLeave ?: boolean,
   showAreaOptions ?: boolean, 
-  fixOnConfirm ?: boolean,
 }
