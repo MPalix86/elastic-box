@@ -1,6 +1,6 @@
 # Elastic-Box
 
-Elastic-Box is a JavaScript/TypeScript library for creating dynamic layouts with resizable and drawable areas inside a container. It provides intuitive interfaces for building interactive UI components that require user-defined areas, selection tools, or dynamic content placement.
+Elastic-Box is a JavaScript/TypeScript library for creating dynamic layouts with resizable and drawable areas inside a container
 
 ## Installation
 
